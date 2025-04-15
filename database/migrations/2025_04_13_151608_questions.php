@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId("quiz_id")->constrained("quizzes")->onDelete("cascade");
             $table->text("content");
-            $table->foreignId("type_id")->constrained("question_types")->cascadeOnDelete();
+            $table->foreignId("question_type_id")->constrained("question_types")->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });
