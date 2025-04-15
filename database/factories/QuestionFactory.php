@@ -19,7 +19,7 @@ class QuestionFactory extends Factory
         return [
             "content" => $this->faker->sentence,
             "quiz_id" => $this->faker->numberBetween(1, 10),
-            "type_id" => $this->faker->numberBetween(1, 3),
+            "question_type_id" => $this->faker->numberBetween(1, 3),
         ];
     }
 }
