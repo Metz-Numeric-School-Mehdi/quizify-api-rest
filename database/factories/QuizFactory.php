@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Tag;
+use App\Models\Quiz;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,11 +19,30 @@ class QuizFactory extends Factory
     public function definition(): array
     {
         return [
-            "title" => fake()->title(),
+            "title" => fake()->sentence(),
+            "slug" => fake()->slug(),
             "description" => fake()->paragraph(),
             "is_public" => fake()->boolean(),
-            "user_id" => fake()->numberBetween(1, 20),
+            "status" => fake()->randomElement(["draft", "published", "archived"]),
             "level_id" => fake()->numberBetween(1, 3),
+            "user_id" => fake()->numberBetween(1, 20),
+            "duration" => fake()->numberBetween(10, 120),
+            "max_attempts" => fake()->numberBetween(1, 5),
+            "pass_score" => fake()->numberBetween(50, 100),
+            "thumbnail" => fake()->imageUrl(),
         ];
+    }
+
+    /**
+     * Configure the factory.
+     *
+     * @return $this
+     */
+    public function configure()
+    {
+        return $this->afterCreating(function (Quiz $quiz) {
+            $tagIds = Tag::inRandomOrder()->limit(rand(1, 3))->pluck("id")->toArray();
+            $quiz->tags()->sync($tagIds);
+        });
     }
 }
