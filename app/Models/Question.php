@@ -8,16 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Question extends Model
 {
-    use SoftDeletes;
+    protected $fillable = ["quiz_id", "content", "question_type_id"];
 
-    protected $fillable = ["content", "quiz_id", "type_id", "level_id"];
-
-    public function questionTypes(): BelongsTo
+    public function questionType(): BelongsTo
     {
         return $this->belongsTo(QuestionType::class);
     }
 
-    public function quizzes(): BelongsTo
+    public function quiz(): BelongsTo
     {
         return $this->belongsTo(Quiz::class);
     }
