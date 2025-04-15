@@ -15,12 +15,12 @@ class QuizController extends Controller
      */
     public function index()
     {
-        $quizzes = Quiz::with("tags")->get();
+        $quizzes = Quiz::with("tags", "level")->get();
 
         if ($quizzes->isEmpty()) {
             return response()->json(
                 [
-                    "message" => "No quizzes found.",
+                    "message" => "Aucun quiz trouvé.",
                 ],
                 404
             );
@@ -75,11 +75,33 @@ class QuizController extends Controller
             if ($request->has("tags")) {
                 $quiz->tags()->sync($request->tags);
             }
-            $quiz->load("tags");
+            $quiz->load("tags", "level");
             return response()->json($quiz, 201);
         } catch (\Exception $e) {
             return response()->json(["error" => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Display the specified quiz.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show($id)
+    {
+        $quiz = Quiz::with("tags", "level")->find($id);
+
+        if (!$quiz) {
+            return response()->json(
+                [
+                    "message" => "Question non trouvée",
+                ],
+                404
+            );
+        }
+
+        return response()->json($quiz);
     }
 
     private function generateUniqueSlug(string $title): string
