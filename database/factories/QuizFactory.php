@@ -29,6 +29,7 @@ class QuizFactory extends Factory
             "duration" => fake()->numberBetween(10, 120),
             "max_attempts" => fake()->numberBetween(1, 5),
             "pass_score" => fake()->numberBetween(50, 100),
+            "category_id" => fake()->numberBetween(1, 7),
             "thumbnail" => fake()->imageUrl(),
         ];
     }

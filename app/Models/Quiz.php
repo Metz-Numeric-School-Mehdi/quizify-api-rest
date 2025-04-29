@@ -48,4 +48,9 @@ class Quiz extends Model
     {
         return $this->belongsToMany(Tag::class);
     }
+    
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

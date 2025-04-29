@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\QuizResource;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -15,7 +16,7 @@ class QuizController extends Controller
      */
     public function index()
     {
-        $quizzes = Quiz::with("tags", "level")->get();
+        $quizzes = Quiz::with("tags", "level", 'category')->get();
 
         if ($quizzes->isEmpty()) {
             return response()->json(
@@ -90,7 +91,7 @@ class QuizController extends Controller
      */
     public function show($id)
     {
-        $quiz = Quiz::with("tags", "level")->find($id);
+        $quiz = Quiz::with("tags", "level", "category")->find($id);
 
         if (!$quiz) {
             return response()->json(
@@ -101,7 +102,7 @@ class QuizController extends Controller
             );
         }
 
-        return response()->json($quiz);
+        return new QuizResource($quiz);
     }
 
     private function generateUniqueSlug(string $title): string
