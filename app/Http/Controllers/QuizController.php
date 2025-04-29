@@ -26,7 +26,7 @@ class QuizController extends Controller
                 404
             );
         }
-        return response()->json($quizzes);
+        return QuizResource::collection($quizzes);
     }
 
     /**
