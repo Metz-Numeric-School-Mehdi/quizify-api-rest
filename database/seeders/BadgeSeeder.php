@@ -2,18 +2,23 @@
 
 namespace Database\Seeders;
 
-use App\Models\Badge;
-use Database\Factories\BadgeFactory;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Badge;
 
 class BadgeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        BadgeFactory::new()->count(10)->create();
+        Badge::create([
+            "name" => "Débutant",
+            "description" => "Attribué après avoir réussi un premier quiz.",
+            "icon" => "debutant.png",
+        ]);
+
+        Badge::create([
+            "name" => "Assidu",
+            "description" => "Attribué après avoir terminé 5 quiz.",
+            "icon" => "assidu.png",
+        ]);
     }
 }
