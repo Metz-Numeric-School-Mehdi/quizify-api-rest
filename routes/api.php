@@ -11,6 +11,9 @@ include base_path("routes/auth.php");
 Route::get("/quizzes", [QuizController::class, "index"]);
 Route::post("/quizzes", [QuizController::class, "store"])->middleware("auth:sanctum");
 Route::get("/quizzes/{id}", [QuizController::class, "show"]);
+Route::post("/quizzes/{quiz}/submit", [QuizController::class, "submit"])->middleware(
+    "auth:sanctum"
+);
 Route::delete("/quizzes/{id}", [QuizController::class, "destroy"])->middleware("auth:sanctum");
 Route::put("/quizzes/{id}", [QuizController::class, "update"])->middleware("auth:sanctum");
 
@@ -26,3 +29,6 @@ Route::put("/questions/{id}", [QuestionController::class, "update"])->middleware
 Route::get("/user", function (Request $request) {
     return $request->user();
 })->middleware("auth:sanctum");
+
+use App\Http\Controllers\UserController;
+Route::post('/users/{user}/assign-badges', [UserController::class, 'assignBadges'])->middleware('auth:sanctum');
