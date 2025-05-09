@@ -27,6 +27,7 @@ class Quiz extends Model
         "pass_score",
         "thumbnail",
         "tag_id",
+        "category_id",
     ];
 
     public function level(): BelongsTo
@@ -47,5 +48,10 @@ class Quiz extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
+    }
+    
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 }

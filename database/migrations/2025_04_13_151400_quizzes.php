@@ -23,6 +23,7 @@ return new class extends Migration {
             $table->integer("max_attempts")->nullable();
             $table->integer("pass_score")->nullable();
             $table->string("thumbnail", 255)->nullable();
+            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes()->index();
         });

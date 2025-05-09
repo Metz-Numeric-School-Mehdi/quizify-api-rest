@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\QuizResource;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -15,7 +16,7 @@ class QuizController extends Controller
      */
     public function index()
     {
-        $quizzes = Quiz::with("tags", "level")->get();
+        $quizzes = Quiz::with("tags", "level", "category")->get();
 
         if ($quizzes->isEmpty()) {
             return response()->json(
@@ -25,7 +26,7 @@ class QuizController extends Controller
                 404
             );
         }
-        return response()->json($quizzes);
+        return QuizResource::collection($quizzes);
     }
 
     /**
@@ -41,6 +42,7 @@ class QuizController extends Controller
                 "title" => "required|string|max:255",
                 "description" => "nullable|string",
                 "level_id" => "required|integer|exists:quiz_levels,id",
+                "category_id" => "required|integer|exists:categories,id", // Ajout de la validation
                 "is_public" => "boolean",
                 "status" => "required|in:draft,published,archived",
                 "duration" => "nullable|integer",
@@ -55,6 +57,9 @@ class QuizController extends Controller
                 "level_id.required" => "Le niveau est obligatoire.",
                 "level_id.integer" => "Le niveau doit être un entier.",
                 "level_id.exists" => "Le niveau sélectionné est invalide.",
+                "category_id.required" => "La catégorie est obligatoire.", // Message personnalisé
+                "category_id.integer" => "La catégorie doit être un entier.",
+                "category_id.exists" => "La catégorie sélectionnée est invalide.",
                 "description.string" => "La description doit être une chaîne de caractères.",
                 "is_public.boolean" => "Le champ public doit être vrai ou faux.",
                 "status.required" => "Le statut est obligatoire.",
@@ -90,7 +95,7 @@ class QuizController extends Controller
      */
     public function show($id)
     {
-        $quiz = Quiz::with("tags", "level")->find($id);
+        $quiz = Quiz::with("tags", "level", "category")->find($id);
 
         if (!$quiz) {
             return response()->json(
@@ -101,7 +106,7 @@ class QuizController extends Controller
             );
         }
 
-        return response()->json($quiz);
+        return new QuizResource($quiz);
     }
 
     private function generateUniqueSlug(string $title): string
