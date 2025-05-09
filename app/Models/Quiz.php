@@ -27,6 +27,7 @@ class Quiz extends Model
         "pass_score",
         "thumbnail",
         "tag_id",
+        "category_id",
     ];
 
     public function level(): BelongsTo
