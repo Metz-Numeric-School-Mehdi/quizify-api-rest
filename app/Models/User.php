@@ -33,9 +33,14 @@ class User extends Authenticatable
         return $this->BelongsTo(Role::class);
     }
 
-    public function quizzes(): HasMany
+    public function badges()
     {
-        return $this->hasMany(Quiz::class);
+        return $this->belongsToMany(\App\Models\Badge::class, 'user_badges');
+    }
+
+    public function quizzes(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\Quiz::class, 'quiz_user')->withPivot('score');
     }
 
     public function quizSessions(): BelongsToMany

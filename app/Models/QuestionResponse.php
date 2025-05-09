@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class QuestionResponse extends Model
 {
-    protected $fillable = ["user_id", "question_id", "answer_id", "is_correct"];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    protected $fillable = [
+        'quiz_id',
+        'user_id',
+        'question_id',
+        'answer_id',
+        'user_answer',
+        'is_correct',
+    ];
 
     public function question()
     {
@@ -21,5 +23,15 @@ class QuestionResponse extends Model
     public function answer()
     {
         return $this->belongsTo(Answer::class);
+    }
+
+    public function quiz()
+    {
+        return $this->belongsTo(Quiz::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
