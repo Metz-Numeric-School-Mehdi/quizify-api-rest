@@ -43,6 +43,7 @@ class AuthController extends Controller
                     "username" => "required|unique:users",
                     "email" => "required|email|unique:users",
                     "password" => "required",
+                    "photo" => "nullable|image|max:2048",
                     Password::min(8)->letters()->numbers()->symbols(),
                 ],
                 [
@@ -59,13 +60,29 @@ class AuthController extends Controller
 
             $data["password"] = Hash::make($data["password"]);
 
+            if ($request->hasFile('photo')) {
+                $file = $request->file('photo');
+                $filename = 'profile_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $path = \Storage::disk('minio')->putFileAs('', $file, $filename);
+                $data['profile_photo'] = $path;
+            }
+
             $user = User::create($data);
 
             $token = $user->createToken("auth_token")->plainTextToken;
 
+            $profile_photo_url = null;
+            if (!empty($user->profile_photo)) {
+                $profile_photo_url = \Storage::disk('minio')->temporaryUrl(
+                    $user->profile_photo,
+                    now()->addMinutes(60)
+                );
+            }
+
             return response()->json([
                 "user" => $user,
                 "token" => $token,
+                "profile_photo_url" => $profile_photo_url,
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(
