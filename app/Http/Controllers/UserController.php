@@ -8,6 +8,17 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    /**
+     * Classement des utilisateurs par ranking croissant (leaderboard).
+     */
+    public function leaderboard()
+    {
+        $users = \App\Models\User::orderBy('ranking')
+            ->take(20)
+            ->get(['id', 'username', 'ranking', 'profile_photo']);
+        return response()->json($users);
+    }
+
     public function assignBadges(Request $request, $userId)
     {
         try {

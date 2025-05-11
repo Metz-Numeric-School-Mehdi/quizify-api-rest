@@ -13,7 +13,14 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(20)->create();
+        $users = User::factory(20)->create();
+
+        $rank = 1;
+
+        foreach ($users as $user) {
+            $user->ranking = $rank++;
+            $user->save();
+        }
 
         $adminDetails = [
             "username" => env("ADMIN_USERNAME", "default_username"),

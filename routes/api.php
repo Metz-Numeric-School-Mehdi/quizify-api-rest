@@ -4,6 +4,7 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\QuizController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
 
 include base_path("routes/auth.php");
 
@@ -30,5 +31,5 @@ Route::get("/user", function (Request $request) {
     return $request->user();
 })->middleware("auth:sanctum");
 
-use App\Http\Controllers\UserController;
 Route::post('/users/{user}/assign-badges', [UserController::class, 'assignBadges'])->middleware('auth:sanctum');
+Route::get('/leaderboard', [UserController::class, 'leaderboard']);

@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->string("lastname")->nullable();
             $table->foreignId("role_id")->nullable()->constrained()->cascadeOnDelete();
             $table->string("profile_photo")->nullable();
-            $table->integer("ranking")->unique()->nullable();
+            $table->integer("ranking")->nullable();
             $table->foreignId("team_id")->nullable()->constrained()->cascadeOnDelete();
             $table->timestamps(0);
             $table->softDeletes();
