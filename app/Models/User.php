@@ -23,7 +23,15 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = ["username", "firstname", "lastname", "email", "password", "role", "profile_photo"];
+    protected $fillable = [
+        "username",
+        "firstname",
+        "lastname",
+        "email",
+        "password",
+        "role",
+        "profile_photo",
+    ];
 
     /**
      * Get the role associated with this user
@@ -35,12 +43,12 @@ class User extends Authenticatable
 
     public function badges()
     {
-        return $this->belongsToMany(\App\Models\Badge::class, 'user_badges');
+        return $this->belongsToMany(\App\Models\Badge::class, "user_badges");
     }
 
-    public function quizzes(): BelongsToMany
+    public function quizzesCreated(): HasMany
     {
-        return $this->belongsToMany(\App\Models\Quiz::class, 'quiz_user')->withPivot('score');
+        return $this->hasMany(\App\Models\Quiz::class);
     }
 
     public function quizSessions(): BelongsToMany

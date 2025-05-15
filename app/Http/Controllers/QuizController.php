@@ -121,13 +121,13 @@ class QuizController extends Controller
                 "title" => "required|string|max:255",
                 "description" => "nullable|string",
                 "level_id" => "required|integer|exists:quiz_levels,id",
-                "category_id" => "required|integer|exists:categories,id", // Ajout de la validation
+                "category_id" => "required|integer|exists:categories,id",
                 "is_public" => "boolean",
                 "status" => "required|in:draft,published,archived",
                 "duration" => "nullable|integer",
                 "max_attempts" => "nullable|integer",
                 "pass_score" => "nullable|integer",
-                "thumbnail" => "nullable|string|max:255",
+                "thumbnail" => "nullable|image|max:3000",
             ],
             [
                 "title.required" => "Le titre est obligatoire.",
@@ -136,7 +136,7 @@ class QuizController extends Controller
                 "level_id.required" => "Le niveau est obligatoire.",
                 "level_id.integer" => "Le niveau doit être un entier.",
                 "level_id.exists" => "Le niveau sélectionné est invalide.",
-                "category_id.required" => "La catégorie est obligatoire.", // Message personnalisé
+                "category_id.required" => "La catégorie est obligatoire.",
                 "category_id.integer" => "La catégorie doit être un entier.",
                 "category_id.exists" => "La catégorie sélectionnée est invalide.",
                 "description.string" => "La description doit être une chaîne de caractères.",
@@ -147,23 +147,43 @@ class QuizController extends Controller
                 "duration.integer" => "La durée doit être un entier.",
                 "max_attempts.integer" => "Le nombre maximum de tentatives doit être un entier.",
                 "pass_score.integer" => "Le score de passage doit être un entier.",
-                "thumbnail.string" => "La miniature doit être une chaîne de caractères.",
-                "thumbnail.max" => "La miniature ne doit pas dépasser 255 caractères.",
+                "thumbnail.max" => "La miniature ne doit pas dépasser 3000 Ko",
             ]
         );
 
+        if ($request->hasFile("thumbnail")) {
+            $file = $request->file("thumbnail");
+            $filename = "quiz_" . uniqid() . "." . $file->getClientOriginalExtension();
+            \Storage::disk("minio")->putFileAs("", $file, $filename);
+            $validatedData["thumbnail"] = $filename;
+        }
+
         $validatedData["slug"] = $this->generateUniqueSlug($validatedData["title"]);
 
-        try {
-            $quiz = $request->user()->quizzes()->create($validatedData);
-            if ($request->has("tags")) {
-                $quiz->tags()->sync($request->tags);
-            }
-            $quiz->load("tags", "level");
-            return response()->json($quiz, 201);
-        } catch (\Exception $e) {
-            return response()->json(["error" => $e->getMessage()], 500);
+        $quiz = $request->user()->quizzesCreated()->create($validatedData);
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(["message" => "Unauthenticated."], 401);
         }
+
+        $responseData = $quiz;
+
+        if (!empty($quiz->thumbnail)) {
+            $thumbnailUrl = \Storage::disk("minio")->temporaryUrl(
+                $quiz->thumbnail,
+                now()->addMinutes(60)
+            );
+        }
+
+        $quiz->load("level");
+
+        return response()
+            ->json([
+                "message" => "Quiz créé avec succès.",
+                "quiz" => $responseData,
+                "thumbnail_url" => $thumbnailUrl ?? null,
+            ])
+            ->setStatusCode(201);
     }
 
     /**

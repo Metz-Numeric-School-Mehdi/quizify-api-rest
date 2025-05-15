@@ -60,12 +60,12 @@ return [
 
         "minio" => [
             "driver" => "s3",
-            "endpoint" => env("MINIO_ENDPOINT", "http://localhost:9000"),
+            "endpoint" => env("MINIO_ENDPOINT"),
             "use_path_style_endpoint" => true,
-            "key" => env("MINIO_ACCESS_KEY", "minioadmin"),
-            "secret" => env("MINIO_SECRET_KEY", "minioadmin"),
+            "key" => env("MINIO_ACCESS_KEY"),
+            "secret" => env("MINIO_SECRET_KEY"),
             "region" => "us-east-1",
-            "bucket" => env("MINIO_BUCKET", "profile-pictures"),
+            "bucket" => env("MINIO_BUCKET"),
         ],
     ],
 
