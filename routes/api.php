@@ -31,5 +31,7 @@ Route::get("/user", function (Request $request) {
     return $request->user();
 })->middleware("auth:sanctum");
 
-Route::post('/users/{user}/assign-badges', [UserController::class, 'assignBadges'])->middleware('auth:sanctum');
-Route::get('/leaderboard', [UserController::class, 'leaderboard']);
+Route::post("/users/{user}/assign-badges", [UserController::class, "assignBadges"])->middleware(
+    "auth:sanctum"
+);
+Route::get("/leaderboard", [UserController::class, "leaderboard"]);
