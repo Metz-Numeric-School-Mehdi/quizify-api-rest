@@ -18,7 +18,7 @@ class UserBadgeFactory extends Factory
     {
         return [
             "user_id" => $this->faker->numberBetween(1, 10),
-            "badge_id" => $this->faker->numberBetween(1, 10),
+            "badge_id" => $this->faker->numberBetween(1, 2),
         ];
     }
 }

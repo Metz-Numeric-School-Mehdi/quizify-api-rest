@@ -30,6 +30,85 @@ class QuizController extends Controller
     }
 
     /**
+     * Soumettre les réponses d'un utilisateur à un quiz et vérifier leur exactitude.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $quizId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function submit(Request $request, $quizId)
+    {
+        try {
+            $validated = $request->validate([
+                "responses" => "required|array",
+                "responses.*.question_id" => "required|integer|exists:questions,id",
+                "responses.*.answer_id" => "nullable|integer|exists:answers,id",
+                "responses.*.user_answer" => "nullable|string",
+            ]);
+
+            $quiz = \App\Models\Quiz::with("questions.answers")->findOrFail($quizId);
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(["error" => "Utilisateur non authentifié"], 401);
+            }
+            $userId = $user->id;
+            $score = 0;
+            $results = [];
+
+            foreach ($validated["responses"] as $response) {
+                $question = $quiz->questions->where("id", $response["question_id"])->first();
+                if (!$question) {
+                    return response()->json(
+                        ["error" => "Question non trouvée: " . $response["question_id"]],
+                        404
+                    );
+                }
+                $correctAnswer = $question->answers->where("is_correct", true)->first();
+                $isCorrect = false;
+
+                if (isset($response["answer_id"])) {
+                    $isCorrect = $correctAnswer && $correctAnswer->id == $response["answer_id"];
+                } elseif (isset($response["user_answer"])) {
+                    $isCorrect =
+                        strtolower(trim($correctAnswer->content ?? "")) ===
+                        strtolower(trim($response["user_answer"]));
+                }
+
+                \App\Models\QuestionResponse::create([
+                    "quiz_id" => $quiz->id,
+                    "user_id" => $userId,
+                    "question_id" => $question->id,
+                    "answer_id" => $response["answer_id"] ?? null,
+                    "user_answer" => $response["user_answer"] ?? null,
+                    "is_correct" => $isCorrect,
+                ]);
+
+                $results[] = [
+                    "question_id" => $question->id,
+                    "is_correct" => $isCorrect,
+                ];
+                if ($isCorrect) {
+                    $score++;
+                }
+            }
+
+            return response()->json([
+                "score" => $score,
+                "total" => count($quiz->questions),
+                "results" => $results,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(
+                [
+                    "error" => $e->getMessage(),
+                    "trace" => $e->getTraceAsString(),
+                ],
+                500
+            );
+        }
+    }
+
+    /**
      * Store a newly created quiz in storage.
      *
      * @param \Illuminate\Http\Request $request
@@ -42,13 +121,13 @@ class QuizController extends Controller
                 "title" => "required|string|max:255",
                 "description" => "nullable|string",
                 "level_id" => "required|integer|exists:quiz_levels,id",
-                "category_id" => "required|integer|exists:categories,id", // Ajout de la validation
+                "category_id" => "required|integer|exists:categories,id",
                 "is_public" => "boolean",
                 "status" => "required|in:draft,published,archived",
                 "duration" => "nullable|integer",
                 "max_attempts" => "nullable|integer",
                 "pass_score" => "nullable|integer",
-                "thumbnail" => "nullable|string|max:255",
+                "thumbnail" => "nullable|image|max:3000",
             ],
             [
                 "title.required" => "Le titre est obligatoire.",
@@ -57,7 +136,7 @@ class QuizController extends Controller
                 "level_id.required" => "Le niveau est obligatoire.",
                 "level_id.integer" => "Le niveau doit être un entier.",
                 "level_id.exists" => "Le niveau sélectionné est invalide.",
-                "category_id.required" => "La catégorie est obligatoire.", // Message personnalisé
+                "category_id.required" => "La catégorie est obligatoire.",
                 "category_id.integer" => "La catégorie doit être un entier.",
                 "category_id.exists" => "La catégorie sélectionnée est invalide.",
                 "description.string" => "La description doit être une chaîne de caractères.",
@@ -68,23 +147,43 @@ class QuizController extends Controller
                 "duration.integer" => "La durée doit être un entier.",
                 "max_attempts.integer" => "Le nombre maximum de tentatives doit être un entier.",
                 "pass_score.integer" => "Le score de passage doit être un entier.",
-                "thumbnail.string" => "La miniature doit être une chaîne de caractères.",
-                "thumbnail.max" => "La miniature ne doit pas dépasser 255 caractères.",
+                "thumbnail.max" => "La miniature ne doit pas dépasser 3000 Ko",
             ]
         );
 
+        if ($request->hasFile("thumbnail")) {
+            $file = $request->file("thumbnail");
+            $filename = "quiz_" . uniqid() . "." . $file->getClientOriginalExtension();
+            \Storage::disk("minio")->putFileAs("", $file, $filename);
+            $validatedData["thumbnail"] = $filename;
+        }
+
         $validatedData["slug"] = $this->generateUniqueSlug($validatedData["title"]);
 
-        try {
-            $quiz = $request->user()->quizzes()->create($validatedData);
-            if ($request->has("tags")) {
-                $quiz->tags()->sync($request->tags);
-            }
-            $quiz->load("tags", "level");
-            return response()->json($quiz, 201);
-        } catch (\Exception $e) {
-            return response()->json(["error" => $e->getMessage()], 500);
+        $quiz = $request->user()->quizzesCreated()->create($validatedData);
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(["message" => "Unauthenticated."], 401);
         }
+
+        $responseData = $quiz;
+
+        if (!empty($quiz->thumbnail)) {
+            $thumbnailUrl = \Storage::disk("minio")->temporaryUrl(
+                $quiz->thumbnail,
+                now()->addMinutes(60)
+            );
+        }
+
+        $quiz->load("level");
+
+        return response()
+            ->json([
+                "message" => "Quiz créé avec succès.",
+                "quiz" => $responseData,
+                "thumbnail_url" => $thumbnailUrl ?? null,
+            ])
+            ->setStatusCode(201);
     }
 
     /**
