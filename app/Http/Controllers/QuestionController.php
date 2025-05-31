@@ -104,41 +104,29 @@ class QuestionController extends Controller
     {
         $question = Question::find($id);
         if (!$question) {
-            return response()->json(
-                [
-                    "message" => "Question non trouvé.",
-                ],
-                404
-            );
+            return response()->json([
+                "message" => "Question non trouvée.",
+            ], 404);
         }
-
-        try {
-            if ($question->quiz->user_id !== $request->user()->id) {
-                return response()->json(
-                    [
-                        "message" => "Vous n'êtes pas autorisé à supprimer cette question.",
-                    ],
-                    403
-                );
-            }
-        } catch (\Exception $e) {
-            return response()->json(
-                [
-                    "message" => "Erreur lors de la vérification de l'autorisation.",
-                    "error" => $e->getMessage(),
-                ],
-                500
-            );
+        if (!$question->quiz) {
+            return response()->json([
+                "message" => "Quiz associé introuvable pour cette question.",
+            ], 404);
         }
-
+        if (!$question->quiz->user_id) {
+            return response()->json([
+                "message" => "Le quiz n'a pas de créateur (user_id manquant).",
+            ], 403);
+        }
+        if ($question->quiz->user_id !== $request->user()->id) {
+            return response()->json([
+                "message" => "Vous n'êtes pas autorisé à supprimer cette question.",
+            ], 403);
+        }
         $question->delete();
-
-        return response()->json(
-            [
-                "message" => "Question supprimé avec succès.",
-            ],
-            200
-        );
+        return response()->json([
+            "message" => "Question supprimée avec succès.",
+        ], 200);
     }
 
     /**
@@ -150,52 +138,45 @@ class QuestionController extends Controller
     public function update(Request $request, $id)
     {
         $question = Question::find($id);
-
         if (!$question) {
-            return response()->json(
-                [
-                    "message" => "Question non trouvé.",
-                ],
-                404
-            );
+            return response()->json([
+                "message" => "Question non trouvée.",
+            ], 404);
         }
-
+        if (!$question->quiz) {
+            return response()->json([
+                "message" => "Quiz associé introuvable pour cette question.",
+            ], 404);
+        }
+        if (!$question->quiz->user_id) {
+            return response()->json([
+                "message" => "Le quiz n'a pas de créateur (user_id manquant).",
+            ], 403);
+        }
         if ($question->quiz->user_id !== $request->user()->id) {
-            return response()->json(
-                [
-                    "message" => "Vous n'êtes pas autorisé à modifier ce question.",
-                ],
-                403
-            );
+            return response()->json([
+                "message" => "Vous n'êtes pas autorisé à modifier cette question.",
+            ], 403);
         }
-
-        $validatedData = $request->validate(
-            [
-                "quiz_id" => "required|integer|exists:quizzes,id",
-                "content" => "required|string|max:255",
-                "question_type_id" => "required|integer|exists:question_types,id",
-            ],
-            [
-                "quiz_id.required" => "Le quiz est obligatoire.",
-                "quiz_id.integer" => "Le quiz doit être un entier.",
-                "quiz_id.exists" => "Le quiz sélectionné est invalide.",
-                "content.required" => "Le contenu est obligatoire.",
-                "content.string" => "Le contenu doit être une chaîne de caractères.",
-                "content.max" => "Le contenu ne doit pas dépasser 255 caractères.",
-                "question_type_id.required" => "Le type de question est obligatoire.",
-                "question_type_id.integer" => "Le type de question doit être un entier.",
-                "question_type_id.exists" => "Le type de question sélectionné est invalide.",
-            ]
-        );
-
+        $validatedData = $request->validate([
+            "quiz_id" => "required|integer|exists:quizzes,id",
+            "content" => "required|string|max:255",
+            "question_type_id" => "required|integer|exists:question_types,id",
+        ], [
+            "quiz_id.required" => "Le quiz est obligatoire.",
+            "quiz_id.integer" => "Le quiz doit être un entier.",
+            "quiz_id.exists" => "Le quiz sélectionné est invalide.",
+            "content.required" => "Le contenu est obligatoire.",
+            "content.string" => "Le contenu doit être une chaîne de caractères.",
+            "content.max" => "Le contenu ne doit pas dépasser 255 caractères.",
+            "question_type_id.required" => "Le type de question est obligatoire.",
+            "question_type_id.integer" => "Le type de question doit être un entier.",
+            "question_type_id.exists" => "Le type de question sélectionné est invalide.",
+        ]);
         $question->update($validatedData);
-
-        return response()->json(
-            [
-                "message" => "Question mis à jour avec succès.",
-                "question" => $question,
-            ],
-            200
-        );
+        return response()->json([
+            "message" => "Question mise à jour avec succès.",
+            "question" => $question,
+        ], 200);
     }
 }
