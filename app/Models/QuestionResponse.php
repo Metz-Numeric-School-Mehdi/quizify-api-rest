@@ -12,7 +12,10 @@ class QuestionResponse extends Model
         'question_id',
         'answer_id',
         'user_answer',
+        'user_response_data',
         'is_correct',
+        'points',
+        'response_time',
     ];
 
     public function question()
