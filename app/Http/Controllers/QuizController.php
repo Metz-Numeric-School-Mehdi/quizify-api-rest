@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\QuizResource;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class QuizController extends Controller
@@ -154,7 +155,7 @@ class QuizController extends Controller
         if ($request->hasFile("thumbnail")) {
             $file = $request->file("thumbnail");
             $filename = "quiz_" . uniqid() . "." . $file->getClientOriginalExtension();
-            \Storage::disk("minio")->putFileAs("", $file, $filename);
+            Storage::disk("minio")->putFileAs('', $file, $filename);
             $validatedData["thumbnail"] = $filename;
         }
 
@@ -167,7 +168,7 @@ class QuizController extends Controller
         }
 
         $responseData = $quiz;
-
+        $thumbnailUrl = null;
         if (!empty($quiz->thumbnail)) {
             $thumbnailUrl = \Storage::disk("minio")->temporaryUrl(
                 $quiz->thumbnail,
@@ -181,7 +182,7 @@ class QuizController extends Controller
             ->json([
                 "message" => "Quiz créé avec succès.",
                 "quiz" => $responseData,
-                "thumbnail_url" => $thumbnailUrl ?? null,
+                "thumbnail_url" => $thumbnailUrl,
             ])
             ->setStatusCode(201);
     }
