@@ -24,19 +24,56 @@ class ScoreController extends Controller
             'quiz_id' => 'required|exists:quizzes,id',
             'score' => 'required|integer',
         ]);
-        return Score::create($data);
+        try {
+            $score = Score::create($data);
+            return response()->json([
+                'message' => 'Score créé avec succès.',
+                'score' => $score
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la création du score.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
         $score = Score::findOrFail($id);
-        $score->update($request->all());
-        return $score;
+        $data = $request->validate([
+            'user_id' => 'sometimes|required|exists:users,id',
+            'quiz_id' => 'sometimes|required|exists:quizzes,id',
+            'score' => 'sometimes|required|integer',
+        ]);
+        try {
+            $score->update($data);
+            return response()->json([
+                'message' => 'Score mis à jour avec succès.',
+                'score' => $score
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la mise à jour du score.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id)
     {
-        Score::destroy($id);
-        return response()->json(['message' => 'Score deleted']);
+        try {
+            $deleted = Score::destroy($id);
+            if ($deleted) {
+                return response()->json(['message' => 'Score supprimé avec succès.']);
+            } else {
+                return response()->json(['message' => 'Aucun score trouvé à supprimer.'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la suppression du score.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
