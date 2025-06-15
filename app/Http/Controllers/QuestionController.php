@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\QuestionResource;
 use App\Models\Question;
 use Exception;
 use Illuminate\Http\Request;
@@ -15,18 +16,13 @@ class QuestionController extends Controller
      */
     public function index()
     {
-        $question = Question::with("quiz")->get();
-
-        if (!$question) {
-            return response()->json(
-                [
-                    "message" => "Aucune question trouvée",
-                ],
-                404
-            );
+        $questions = Question::with('answers')->get();
+        if ($questions->isEmpty()) {
+            return response()->json([
+                'message' => 'Aucune question trouvée',
+            ], 404);
         }
-
-        return response()->json($question);
+        return QuestionResource::collection($questions);
     }
 
     /**
@@ -37,18 +33,13 @@ class QuestionController extends Controller
      */
     public function show($id)
     {
-        $question = Question::with("questionType")->get()->find($id);
-
+        $question = Question::with('answers')->find($id);
         if (!$question) {
-            return response()->json(
-                [
-                    "message" => "Question non trouvée",
-                ],
-                404
-            );
+            return response()->json([
+                'message' => 'Question non trouvée',
+            ], 404);
         }
-
-        return response()->json($question);
+        return new QuestionResource($question);
     }
 
     /**
@@ -61,35 +52,31 @@ class QuestionController extends Controller
     {
         $validatedData = $request->validate(
             [
-                "quiz_id" => "required|integer|exists:quizzes,id",
-                "content" => "required|string|max:255",
-                "question_type_id" => "required|integer|exists:question_types,id",
+                'quiz_id' => 'required|integer|exists:quizzes,id',
+                'content' => 'required|string|max:255',
+                'question_type_id' => 'required|integer|exists:question_types,id',
             ],
             [
-                "quiz_id.required" => "Le quiz est obligatoire.",
-                "quiz_id.integer" => "Le quiz doit être un entier.",
-                "quiz_id.exists" => "Le quiz sélectionné est invalide.",
-                "content.required" => "Le contenu est obligatoire.",
-                "content.string" => "Le contenu doit être une chaîne de caractères.",
-                "content.max" => "Le contenu ne doit pas dépasser 255 caractères.",
-                "question_type_id.required" => "Le type de question est obligatoire.",
-                "question_type_id.integer" => "Le type de question doit être un entier.",
-                "question_type_id.exists" => "Le type de question sélectionné est invalide.",
+                'quiz_id.required' => 'Le quiz est obligatoire.',
+                'quiz_id.integer' => 'Le quiz doit être un entier.',
+                'quiz_id.exists' => 'Le quiz sélectionné est invalide.',
+                'content.required' => 'Le contenu est obligatoire.',
+                'content.string' => 'Le contenu doit être une chaîne de caractères.',
+                'content.max' => 'Le contenu ne doit pas dépasser 255 caractères.',
+                'question_type_id.required' => 'Le type de question est obligatoire.',
+                'question_type_id.integer' => 'Le type de question doit être un entier.',
+                'question_type_id.exists' => 'Le type de question sélectionné est invalide.',
             ]
         );
-
         try {
             $question = Question::create($validatedData);
-            $question->load("questionType");
-            return response()->json($question);
+            $question->load('answers');
+            return new QuestionResource($question);
         } catch (\Exception $e) {
-            return response()->json(
-                [
-                    "message" => "Erreur lors de la création de la question.",
-                    "error" => $e->getMessage(),
-                ],
-                500
-            );
+            return response()->json([
+                'message' => 'Erreur lors de la création de la question.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 

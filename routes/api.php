@@ -29,43 +29,43 @@ Route::post("/users/{user}/assign-badges", [UserController::class, "assignBadges
 Route::get("/leaderboard", [UserController::class, "leaderboard"]);
 
 Route::get('/organizations', [App\Http\Controllers\OrganizationController::class, 'index']);
-Route::post('/organizations', [App\Http\Controllers\OrganizationController::class, 'store']);
+Route::post('/organizations', [App\Http\Controllers\OrganizationController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/organizations/{id}', [App\Http\Controllers\OrganizationController::class, 'show']);
-Route::put('/organizations/{id}', [App\Http\Controllers\OrganizationController::class, 'update']);
-Route::delete('/organizations/{id}', [App\Http\Controllers\OrganizationController::class, 'destroy']);
+Route::put('/organizations/{id}', [App\Http\Controllers\OrganizationController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/organizations/{id}', [App\Http\Controllers\OrganizationController::class, 'destroy'])->middleware('auth:sanctum');
 
 Route::get('/teams', [App\Http\Controllers\TeamController::class, 'index']);
-Route::post('/teams', [App\Http\Controllers\TeamController::class, 'store']);
+Route::post('/teams', [App\Http\Controllers\TeamController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/teams/{id}', [App\Http\Controllers\TeamController::class, 'show']);
-Route::put('/teams/{id}', [App\Http\Controllers\TeamController::class, 'update']);
-Route::delete('/teams/{id}', [App\Http\Controllers\TeamController::class, 'destroy']);
+Route::put('/teams/{id}', [App\Http\Controllers\TeamController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/teams/{id}', [App\Http\Controllers\TeamController::class, 'destroy'])->middleware('auth:sanctum');
 
 Route::get('/badges', [App\Http\Controllers\BadgeController::class, 'index']);
-Route::post('/badges', [App\Http\Controllers\BadgeController::class, 'store']);
+Route::post('/badges', [App\Http\Controllers\BadgeController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/badges/{id}', [App\Http\Controllers\BadgeController::class, 'show']);
-Route::put('/badges/{id}', [App\Http\Controllers\BadgeController::class, 'update']);
-Route::delete('/badges/{id}', [App\Http\Controllers\BadgeController::class, 'destroy']);
+Route::put('/badges/{id}', [App\Http\Controllers\BadgeController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/badges/{id}', [App\Http\Controllers\BadgeController::class, 'destroy'])->middleware('auth:sanctum');
 
 Route::get('/scores', [App\Http\Controllers\ScoreController::class, 'index']);
-Route::post('/scores', [App\Http\Controllers\ScoreController::class, 'store']);
+Route::post('/scores', [App\Http\Controllers\ScoreController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/scores/{id}', [App\Http\Controllers\ScoreController::class, 'show']);
-Route::put('/scores/{id}', [App\Http\Controllers\ScoreController::class, 'update']);
-Route::delete('/scores/{id}', [App\Http\Controllers\ScoreController::class, 'destroy']);
+Route::put('/scores/{id}', [App\Http\Controllers\ScoreController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/scores/{id}', [App\Http\Controllers\ScoreController::class, 'destroy'])->middleware('auth:sanctum');
 
 Route::get('/question-types', [App\Http\Controllers\QuestionTypeController::class, 'index']);
-Route::post('/question-types', [App\Http\Controllers\QuestionTypeController::class, 'store']);
+Route::post('/question-types', [App\Http\Controllers\QuestionTypeController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/question-types/{id}', [App\Http\Controllers\QuestionTypeController::class, 'show']);
-Route::put('/question-types/{id}', [App\Http\Controllers\QuestionTypeController::class, 'update']);
-Route::delete('/question-types/{id}', [App\Http\Controllers\QuestionTypeController::class, 'destroy']);
+Route::put('/question-types/{id}', [App\Http\Controllers\QuestionTypeController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/question-types/{id}', [App\Http\Controllers\QuestionTypeController::class, 'destroy'])->middleware('auth:sanctum');
 
 Route::get('/answers', [App\Http\Controllers\AnswerController::class, 'index']);
-Route::post('/answers', [App\Http\Controllers\AnswerController::class, 'store']);
+Route::post('/answers', [App\Http\Controllers\AnswerController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'show']);
-Route::put('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'update']);
-Route::delete('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'destroy']);
+Route::put('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'update'])->middleware("auth:sanctum");
+Route::delete('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'destroy'])->middleware('auth:sanctum');;
 
 Route::get('/question-responses', [App\Http\Controllers\QuestionResponseController::class, 'index']);
-Route::post('/question-responses', [App\Http\Controllers\QuestionResponseController::class, 'store']);
+Route::post('/question-responses', [App\Http\Controllers\QuestionResponseController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/question-responses/{id}', [App\Http\Controllers\QuestionResponseController::class, 'show']);
 Route::put('/question-responses/{id}', [App\Http\Controllers\QuestionResponseController::class, 'update']);
 Route::delete('/question-responses/{id}', [App\Http\Controllers\QuestionResponseController::class, 'destroy']);

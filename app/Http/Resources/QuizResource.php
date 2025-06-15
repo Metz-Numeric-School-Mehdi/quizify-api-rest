@@ -26,10 +26,32 @@ class QuizResource extends JsonResource
             "max_attempts" => $this->max_attempts,
             "pass_score" => $this->pass_score,
             "thumbnail" => $this->thumbnail,
+            "thumbnail_url" => $this->thumbnail
+                ? (\Storage::disk('minio')->exists($this->thumbnail)
+                    ? \Storage::disk('minio')->temporaryUrl($this->thumbnail, now()->addMinutes(60))
+                    : null)
+                : null,
             "tags" => $this->tags,
             "category" => $this->category,
+            "questions" => $this->whenLoaded('questions', function () {
+                return $this->questions->map(function ($question) {
+                    return [
+                        "id" => $question->id,
+                        "content" => $question->content,
+                        "question_type_id" => $question->question_type_id ?? null,
+                        "answers" => $question->answers->map(function ($answer) {
+                            return [
+                                "id" => $answer->id,
+                                "content" => $answer->content,
+                                "is_correct" => $answer->is_correct,
+                            ];
+                        }),
+                    ];
+                });
+            }),
             "created_at" => $this->created_at,
             "updated_at" => $this->updated_at,
+            "status" => $this->status,
         ];
     }
 }

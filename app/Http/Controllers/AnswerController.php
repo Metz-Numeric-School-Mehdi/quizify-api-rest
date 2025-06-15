@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Answer;
+use App\Models\Question;
 use Illuminate\Http\Request;
 
 class AnswerController extends Controller
@@ -22,16 +23,37 @@ class AnswerController extends Controller
         $data = $request->validate([
             'question_id' => 'required|exists:questions,id',
             'content' => 'required|string',
-            'is_correct' => 'boolean',
+            'is_correct' => 'required|boolean',
+        ], [
+            'question_id.required' => 'La question est obligatoire.',
+            'question_id.exists' => 'La question sélectionnée est invalide.',
+            'content.required' => 'Le contenu est obligatoire.',
+            'content.string' => 'Le contenu doit être une chaîne de caractères.',
+            'is_correct.required' => 'La réponse doit indiquer si elle est correcte ou non.',
         ]);
-        return Answer::create($data);
+        $answer = Answer::create($data);
+        return response()->json($answer, 201);
     }
 
     public function update(Request $request, $id)
     {
         $answer = Answer::findOrFail($id);
-        $answer->update($request->all());
-        return $answer;
+        $validatedData = $request->validate([
+            'question_id' => 'required|exists:questions,id',
+            'content' => 'required|string',
+            'is_correct' => 'required|boolean',
+        ], [
+            'question_id.required' => 'La question est obligatoire.',
+            'question_id.exists' => 'La question sélectionnée est invalide.',
+            'content.required' => 'Le contenu est obligatoire.',
+            'content.string' => 'Le contenu doit être une chaîne de caractères.',
+            'is_correct.required' => 'La réponse doit indiquer si elle est correcte ou non.',
+        ]);
+        $answer->update($validatedData);
+        return response()->json([
+            'message' => 'Réponse mise à jour avec succès.',
+            'answer' => $answer,
+        ], 200);
     }
 
     public function destroy($id)
