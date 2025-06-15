@@ -151,18 +151,25 @@ class QuizController extends Controller
             "thumbnail.max" => "La miniature ne doit pas dépasser 3000 Ko",
         ]);
 
-        if ($request->hasFile("thumbnail")) {
-            $file = $request->file("thumbnail");
-            $filename = "quiz_" . uniqid() . "." . $file->getClientOriginalExtension();
-            Storage::disk("minio")->putFileAs('', $file, $filename);
-            $validatedData["thumbnail"] = $filename;
+        try {
+            if ($request->hasFile("thumbnail")) {
+                $file = $request->file("thumbnail");
+                $filename = "quiz_" . uniqid() . "." . $file->getClientOriginalExtension();
+                Storage::disk("minio")->putFileAs('', $file, $filename);
+                $validatedData["thumbnail"] = $filename;
+            }
+
+            $validatedData["slug"] = $this->generateUniqueSlug($validatedData["title"]);
+
+            $quiz = $request->user()->quizzesCreated()->create($validatedData);
+            $quiz->load(["level", "user", "tags", "category"]);
+            return response()->json(new QuizResource($quiz), 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la création du quiz.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $validatedData["slug"] = $this->generateUniqueSlug($validatedData["title"]);
-
-        $quiz = $request->user()->quizzesCreated()->create($validatedData);
-        $quiz->load(["level", "user", "tags", "category"]);
-        return response()->json(new QuizResource($quiz), 201);
     }
 
     /**
@@ -300,14 +307,21 @@ class QuizController extends Controller
             );
         }
 
-        $quiz->tags()->detach();
-        $quiz->delete();
+        try {
+            $quiz->tags()->detach();
+            $quiz->delete();
 
-        return response()->json(
-            [
-                "message" => "Quiz supprimé avec succès.",
-            ],
-            200
-        );
+            return response()->json(
+                [
+                    "message" => "Quiz supprimé avec succès.",
+                ],
+                200
+            );
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la suppression du quiz.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
