@@ -1,0 +1,195 @@
+{
+  "info": {
+    "_postman_id": "quizify-api-collection-2025",
+    "name": "Quizify API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"mdg23\",\n  \"email\": \"mdg@admin.com\",\n  \"password\": \"@Admin123\",\n  \"firstname\": \"Mehdi\",\n  \"lastname\": \"DIAS GOMES\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/signup", "host": ["{{base_url}}"], "path": ["api", "auth", "signup"] }
+          }
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"mdg@admin.com\",\n  \"password\": \"@Admin123\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/signin", "host": ["{{base_url}}"], "path": ["api", "auth", "signin"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.environment.set(\"token\", json.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{base_url}}/api/auth/signout", "host": ["{{base_url}}"], "path": ["api", "auth", "signout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Profile",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{base_url}}/api/user", "host": ["{{base_url}}"], "path": ["api", "user"] }
+          }
+        },
+        {
+          "name": "Leaderboard",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/leaderboard", "host": ["{{base_url}}"], "path": ["api", "leaderboard"] }
+          }
+        },
+        {
+          "name": "Assign Badges",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"badges\": [1,2]\n}" },
+            "url": { "raw": "{{base_url}}/api/users/1/assign-badges", "host": ["{{base_url}}"], "path": ["api", "users", "1", "assign-badges"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quizzes",
+      "item": [
+        { "name": "List Quizzes", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quizzes", "host": ["{{base_url}}"], "path": ["api", "quizzes"] } } },
+        { "name": "Show Quiz", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quizzes/:id", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id"], "variable": [{ "key": "id", "value": "1" }] } } },
+        { "name": "Create Quiz", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "body": { "mode": "formdata", "formdata": [ { "key": "title", "value": "Quiz Test", "type": "text" }, { "key": "description", "value": "Description", "type": "text" }, { "key": "level_id", "value": "1", "type": "text" }, { "key": "category_id", "value": "1", "type": "text" }, { "key": "is_public", "value": "true", "type": "text" }, { "key": "status", "value": "published", "type": "text" }, { "key": "thumbnail", "type": "file" } ] }, "url": { "raw": "{{base_url}}/api/quizzes", "host": ["{{base_url}}"], "path": ["api", "quizzes"] } } },
+        { "name": "Update Quiz", "request": { "method": "PUT", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Quiz Test Updated\",\n  \"description\": \"Description\",\n  \"level_id\": 1,\n  \"category_id\": 1,\n  \"is_public\": true,\n  \"status\": \"published\"\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id"], "variable": [{ "key": "id", "value": "1" }] } } },
+        { "name": "Delete Quiz", "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/quizzes/:id", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id"], "variable": [{ "key": "id", "value": "1" }] } } },
+        { "name": "Submit Quiz", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 1,\n      \"answer_id\": 1\n    }\n  ]\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id/submit", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id", "submit"], "variable": [{ "key": "id", "value": "1" }] } } }
+      ]
+    },
+    {
+      "name": "Questions",
+      "item": [
+        { "name": "List Questions", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/questions", "host": ["{{base_url}}"], "path": ["api", "questions"] } } },
+        { "name": "Show Question", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/questions/:id", "host": ["{{base_url}}"], "path": ["api", "questions", ":id"] } } },
+        { "name": "Create Question", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"quiz_id\": 1,\n  \"content\": \"Question test ?\",\n  \"question_type_id\": 1\n}" }, "url": { "raw": "{{base_url}}/api/questions", "host": ["{{base_url}}"], "path": ["api", "questions"] } } },
+        { "name": "Update Question", "request": { "method": "PUT", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"quiz_id\": 1,\n  \"content\": \"Question test updated ?\",\n  \"question_type_id\": 1\n}" }, "url": { "raw": "{{base_url}}/api/questions/:id", "host": ["{{base_url}}"], "path": ["api", "questions", ":id"] } } },
+        { "name": "Delete Question", "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/questions/:id", "host": ["{{base_url}}"], "path": ["api", "questions", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Answers",
+      "item": [
+        { "name": "List Answers", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/answers", "host": ["{{base_url}}"], "path": ["api", "answers"] } } },
+        { "name": "Show Answer", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/answers/:id", "host": ["{{base_url}}"], "path": ["api", "answers", ":id"] } } },
+        { "name": "Create Answer", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"question_id\": 1,\n  \"content\": \"Réponse test\",\n  \"is_correct\": true\n}" }, "url": { "raw": "{{base_url}}/api/answers", "host": ["{{base_url}}"], "path": ["api", "answers"] } } },
+        { "name": "Update Answer", "request": { "method": "PUT", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"question_id\": 1,\n  \"content\": \"Réponse test modifiée\",\n  \"is_correct\": false\n}" }, "url": { "raw": "{{base_url}}/api/answers/:id", "host": ["{{base_url}}"], "path": ["api", "answers", ":id"] } } },
+        { "name": "Delete Answer", "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/answers/:id", "host": ["{{base_url}}"], "path": ["api", "answers", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "item": [
+        { "name": "List Organizations", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/organizations", "host": ["{{base_url}}"], "path": ["api", "organizations"] } } },
+        { "name": "Show Organization", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/organizations/:id", "host": ["{{base_url}}"], "path": ["api", "organizations", ":id"] } } },
+        { "name": "Create Organization", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Organization Test\"\n}" }, "url": { "raw": "{{base_url}}/api/organizations", "host": ["{{base_url}}"], "path": ["api", "organizations"] } } },
+        { "name": "Update Organization", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Organization Test Updated\"\n}" }, "url": { "raw": "{{base_url}}/api/organizations/:id", "host": ["{{base_url}}"], "path": ["api", "organizations", ":id"] } } },
+        { "name": "Delete Organization", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/organizations/:id", "host": ["{{base_url}}"], "path": ["api", "organizations", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Teams",
+      "item": [
+        { "name": "List Teams", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/teams", "host": ["{{base_url}}"], "path": ["api", "teams"] } } },
+        { "name": "Show Team", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/teams/:id", "host": ["{{base_url}}"], "path": ["api", "teams", ":id"] } } },
+        { "name": "Create Team", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Team Test\",\n  \"organization_id\": 1\n}" }, "url": { "raw": "{{base_url}}/api/teams", "host": ["{{base_url}}"], "path": ["api", "teams"] } } },
+        { "name": "Update Team", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Team Test Updated\",\n  \"organization_id\": 1\n}" }, "url": { "raw": "{{base_url}}/api/teams/:id", "host": ["{{base_url}}"], "path": ["api", "teams", ":id"] } } },
+        { "name": "Delete Team", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/teams/:id", "host": ["{{base_url}}"], "path": ["api", "teams", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Badges",
+      "item": [
+        { "name": "List Badges", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/badges", "host": ["{{base_url}}"], "path": ["api", "badges"] } } },
+        { "name": "Show Badge", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/badges/:id", "host": ["{{base_url}}"], "path": ["api", "badges", ":id"] } } },
+        { "name": "Create Badge", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Badge Test\",\n  \"description\": \"Description\",\n  \"icon\": \"icon.png\"\n}" }, "url": { "raw": "{{base_url}}/api/badges", "host": ["{{base_url}}"], "path": ["api", "badges"] } } },
+        { "name": "Update Badge", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Badge Test Updated\",\n  \"description\": \"Description\",\n  \"icon\": \"icon2.png\"\n}" }, "url": { "raw": "{{base_url}}/api/badges/:id", "host": ["{{base_url}}"], "path": ["api", "badges", ":id"] } } },
+        { "name": "Delete Badge", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/badges/:id", "host": ["{{base_url}}"], "path": ["api", "badges", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Scores",
+      "item": [
+        { "name": "List Scores", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/scores", "host": ["{{base_url}}"], "path": ["api", "scores"] } } },
+        { "name": "Show Score", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/scores/:id", "host": ["{{base_url}}"], "path": ["api", "scores", ":id"] } } },
+        { "name": "Create Score", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"user_id\": 1,\n  \"quiz_id\": 1,\n  \"score\": 10\n}" }, "url": { "raw": "{{base_url}}/api/scores", "host": ["{{base_url}}"], "path": ["api", "scores"] } } },
+        { "name": "Update Score", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"user_id\": 1,\n  \"quiz_id\": 1,\n  \"score\": 15\n}" }, "url": { "raw": "{{base_url}}/api/scores/:id", "host": ["{{base_url}}"], "path": ["api", "scores", ":id"] } } },
+        { "name": "Delete Score", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/scores/:id", "host": ["{{base_url}}"], "path": ["api", "scores", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Question Types",
+      "item": [
+        { "name": "List Question Types", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/question-types", "host": ["{{base_url}}"], "path": ["api", "question-types"] } } },
+        { "name": "Show Question Type", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/question-types/:id", "host": ["{{base_url}}"], "path": ["api", "question-types", ":id"] } } },
+        { "name": "Create Question Type", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"QCM\"\n}" }, "url": { "raw": "{{base_url}}/api/question-types", "host": ["{{base_url}}"], "path": ["api", "question-types"] } } },
+        { "name": "Update Question Type", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"QCM Updated\"\n}" }, "url": { "raw": "{{base_url}}/api/question-types/:id", "host": ["{{base_url}}"], "path": ["api", "question-types", ":id"] } } },
+        { "name": "Delete Question Type", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/question-types/:id", "host": ["{{base_url}}"], "path": ["api", "question-types", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Question Responses",
+      "item": [
+        { "name": "List Question Responses", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/question-responses", "host": ["{{base_url}}"], "path": ["api", "question-responses"] } } },
+        { "name": "Show Question Response", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/question-responses/:id", "host": ["{{base_url}}"], "path": ["api", "question-responses", ":id"] } } },
+        { "name": "Create Question Response", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"quiz_id\": 1,\n  \"user_id\": 1,\n  \"question_id\": 1,\n  \"answer_id\": 1,\n  \"user_answer\": \"Réponse\",\n  \"user_response_data\": null,\n  \"is_correct\": true,\n  \"points\": 1,\n  \"response_time\": 10\n}" }, "url": { "raw": "{{base_url}}/api/question-responses", "host": ["{{base_url}}"], "path": ["api", "question-responses"] } } },
+        { "name": "Update Question Response", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"quiz_id\": 1,\n  \"user_id\": 1,\n  \"question_id\": 1,\n  \"answer_id\": 1,\n  \"user_answer\": \"Réponse modifiée\",\n  \"user_response_data\": null,\n  \"is_correct\": false,\n  \"points\": 0,\n  \"response_time\": 12\n}" }, "url": { "raw": "{{base_url}}/api/question-responses/:id", "host": ["{{base_url}}"], "path": ["api", "question-responses", ":id"] } } },
+        { "name": "Delete Question Response", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/question-responses/:id", "host": ["{{base_url}}"], "path": ["api", "question-responses", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Quiz Levels",
+      "item": [
+        { "name": "List Quiz Levels", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quiz-levels", "host": ["{{base_url}}"], "path": ["api", "quiz-levels"] } } }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        { "name": "List Categories", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/categories", "host": ["{{base_url}}"], "path": ["api", "categories"] } } }
+      ]
+    }
+  ]
+}

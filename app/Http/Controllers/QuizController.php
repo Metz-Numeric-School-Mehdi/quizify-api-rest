@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\QuizResource;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class QuizController extends Controller
@@ -16,7 +17,7 @@ class QuizController extends Controller
      */
     public function index()
     {
-        $quizzes = Quiz::with("tags", "level", "category")->get();
+        $quizzes = Quiz::with(["tags", "level", "category", "user"])->get();
 
         if ($quizzes->isEmpty()) {
             return response()->json(
@@ -26,7 +27,9 @@ class QuizController extends Controller
                 404
             );
         }
-        return QuizResource::collection($quizzes);
+
+        // On ne charge pas les questions/réponses dans l'index pour chaque quiz
+        return response()->json(QuizResource::collection($quizzes));
     }
 
     /**
@@ -116,74 +119,50 @@ class QuizController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate(
-            [
-                "title" => "required|string|max:255",
-                "description" => "nullable|string",
-                "level_id" => "required|integer|exists:quiz_levels,id",
-                "category_id" => "required|integer|exists:categories,id",
-                "is_public" => "boolean",
-                "status" => "required|in:draft,published,archived",
-                "duration" => "nullable|integer",
-                "max_attempts" => "nullable|integer",
-                "pass_score" => "nullable|integer",
-                "thumbnail" => "nullable|image|max:3000",
-            ],
-            [
-                "title.required" => "Le titre est obligatoire.",
-                "title.string" => "Le titre doit être une chaîne de caractères.",
-                "title.max" => "Le titre ne doit pas dépasser 255 caractères.",
-                "level_id.required" => "Le niveau est obligatoire.",
-                "level_id.integer" => "Le niveau doit être un entier.",
-                "level_id.exists" => "Le niveau sélectionné est invalide.",
-                "category_id.required" => "La catégorie est obligatoire.",
-                "category_id.integer" => "La catégorie doit être un entier.",
-                "category_id.exists" => "La catégorie sélectionnée est invalide.",
-                "description.string" => "La description doit être une chaîne de caractères.",
-                "is_public.boolean" => "Le champ public doit être vrai ou faux.",
-                "status.required" => "Le statut est obligatoire.",
-                "status.in" =>
-                    "Le statut doit être l'une des valeurs suivantes : draft, published, archived.",
-                "duration.integer" => "La durée doit être un entier.",
-                "max_attempts.integer" => "Le nombre maximum de tentatives doit être un entier.",
-                "pass_score.integer" => "Le score de passage doit être un entier.",
-                "thumbnail.max" => "La miniature ne doit pas dépasser 3000 Ko",
-            ]
-        );
+        $validatedData = $request->validate([
+            "title" => "required|string|max:255",
+            "description" => "nullable|string",
+            "level_id" => "required|integer|exists:quiz_levels,id",
+            "category_id" => "required|integer|exists:categories,id",
+            "is_public" => "boolean",
+            "status" => "required|in:draft,published,archived",
+            "duration" => "nullable|integer",
+            "max_attempts" => "nullable|integer",
+            "pass_score" => "nullable|integer",
+            "thumbnail" => "nullable|image|max:3000",
+        ], [
+            "title.required" => "Le titre est obligatoire.",
+            "title.string" => "Le titre doit être une chaîne de caractères.",
+            "title.max" => "Le titre ne doit pas dépasser 255 caractères.",
+            "level_id.required" => "Le niveau est obligatoire.",
+            "level_id.integer" => "Le niveau doit être un entier.",
+            "level_id.exists" => "Le niveau sélectionné est invalide.",
+            "category_id.required" => "La catégorie est obligatoire.",
+            "category_id.integer" => "La catégorie doit être un entier.",
+            "category_id.exists" => "La catégorie sélectionnée est invalide.",
+            "description.string" => "La description doit être une chaîne de caractères.",
+            "is_public.boolean" => "Le champ public doit être vrai ou faux.",
+            "status.required" => "Le statut est obligatoire.",
+            "status.in" =>
+                "Le statut doit être l'une des valeurs suivantes : draft, published, archived.",
+            "duration.integer" => "La durée doit être un entier.",
+            "max_attempts.integer" => "Le nombre maximum de tentatives doit être un entier.",
+            "pass_score.integer" => "Le score de passage doit être un entier.",
+            "thumbnail.max" => "La miniature ne doit pas dépasser 3000 Ko",
+        ]);
 
         if ($request->hasFile("thumbnail")) {
             $file = $request->file("thumbnail");
             $filename = "quiz_" . uniqid() . "." . $file->getClientOriginalExtension();
-            \Storage::disk("minio")->putFileAs("", $file, $filename);
+            Storage::disk("minio")->putFileAs('', $file, $filename);
             $validatedData["thumbnail"] = $filename;
         }
 
         $validatedData["slug"] = $this->generateUniqueSlug($validatedData["title"]);
 
         $quiz = $request->user()->quizzesCreated()->create($validatedData);
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(["message" => "Unauthenticated."], 401);
-        }
-
-        $responseData = $quiz;
-
-        if (!empty($quiz->thumbnail)) {
-            $thumbnailUrl = \Storage::disk("minio")->temporaryUrl(
-                $quiz->thumbnail,
-                now()->addMinutes(60)
-            );
-        }
-
-        $quiz->load("level");
-
-        return response()
-            ->json([
-                "message" => "Quiz créé avec succès.",
-                "quiz" => $responseData,
-                "thumbnail_url" => $thumbnailUrl ?? null,
-            ])
-            ->setStatusCode(201);
+        $quiz->load(["level", "user", "tags", "category"]);
+        return response()->json(new QuizResource($quiz), 201);
     }
 
     /**
@@ -194,18 +173,21 @@ class QuizController extends Controller
      */
     public function show($id)
     {
-        $quiz = Quiz::with("tags", "level", "category")->find($id);
+        $quiz = Quiz::with([
+            "tags",
+            "level",
+            "category",
+            "user",
+            "questions.answers"
+        ])->find($id);
 
         if (!$quiz) {
-            return response()->json(
-                [
-                    "message" => "Question non trouvée",
-                ],
-                404
-            );
+            return response()->json([
+                "message" => "Quiz non trouvé",
+            ], 404);
         }
 
-        return new QuizResource($quiz);
+        return response()->json(new QuizResource($quiz));
     }
 
     private function generateUniqueSlug(string $title): string
@@ -232,72 +214,62 @@ class QuizController extends Controller
         $quiz = Quiz::find($id);
 
         if (!$quiz) {
-            return response()->json(
-                [
-                    "message" => "Quiz non trouvé.",
-                ],
-                404
-            );
+            return response()->json([
+                "message" => "Quiz non trouvé.",
+            ], 404);
         }
 
         if ($quiz->user_id !== $request->user()->id) {
-            return response()->json(
-                [
-                    "message" => "Vous n'êtes pas autorisé à modifier ce quiz.",
-                ],
-                403
-            );
+            return response()->json([
+                "message" => "Vous n'êtes pas autorisé à modifier ce quiz.",
+            ], 403);
         }
 
-        $validatedData = $request->validate(
-            [
+        try {
+            $validatedData = $request->validate([
                 "title" => "required|string|max:255",
                 "description" => "nullable|string",
                 "level_id" => "required|integer|exists:quiz_levels,id",
+                "category_id" => "required|integer|exists:categories,id",
                 "is_public" => "boolean",
                 "status" => "required|in:draft,published,archived",
                 "duration" => "nullable|integer",
                 "max_attempts" => "nullable|integer",
                 "pass_score" => "nullable|integer",
                 "thumbnail" => "nullable|string|max:255",
-            ],
-            [
+            ], [
                 "title.required" => "Le titre est obligatoire.",
-                "title.string" => "Le titre doit être une chaîne de caractères.",
                 "title.max" => "Le titre ne doit pas dépasser 255 caractères.",
                 "level_id.required" => "Le niveau est obligatoire.",
-                "level_id.integer" => "Le niveau doit être un entier.",
-                "level_id.exists" => "Le niveau sélectionné est invalide.",
+                "category_id.required" => "La catégorie est obligatoire.",
                 "description.string" => "La description doit être une chaîne de caractères.",
                 "is_public.boolean" => "Le champ public doit être vrai ou faux.",
                 "status.required" => "Le statut est obligatoire.",
-                "status.in" =>
-                    "Le statut doit être l'une des valeurs suivantes : draft, published, archived.",
-                "duration.integer" => "La durée doit être un entier.",
-                "max_attempts.integer" => "Le nombre maximum de tentatives doit être un entier.",
-                "pass_score.integer" => "Le score de passage doit être un entier.",
-                "thumbnail.string" => "La miniature doit être une chaîne de caractères.",
-                "thumbnail.max" => "La miniature ne doit pas dépasser 255 caractères.",
-            ]
-        );
+            ]);
 
-        if ($request->has("title")) {
-            $validatedData["slug"] = Str::slug($request->input("title"));
+            if ($request->has("title")) {
+                $validatedData["slug"] = Str::slug($request->input("title"));
+            }
+
+            $quiz->update($validatedData);
+            $quiz->load(["level", "user", "tags", "category", "questions.answers"]);
+
+            if ($request->has("tags")) {
+                $quiz->tags()->sync($request->tags);
+            }
+
+            return response()->json(new QuizResource($quiz), 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la mise à jour du quiz',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $quiz->update($validatedData);
-
-        if ($request->has("tags")) {
-            $quiz->tags()->sync($request->tags);
-        }
-
-        return response()->json(
-            [
-                "message" => "Quiz mis à jour avec succès.",
-                "quiz" => $quiz,
-            ],
-            200
-        );
     }
 
     /**

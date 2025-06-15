@@ -14,9 +14,9 @@ class QuizLevel extends Seeder
     public function run(): void
     {
         DB::table("quiz_levels")->insert([
-            ["name" => "Easy", "created_at" => now()],
-            ["name" => "Medium", "created_at" => now()],
-            ["name" => "Hard", "created_at" => now()],
+            ["name" => "Facile", "created_at" => now()],
+            ["name" => "Moyen", "created_at" => now()],
+            ["name" => "Difficile", "created_at" => now()],
         ]);
     }
 }
