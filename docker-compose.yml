@@ -1,43 +1,57 @@
+version: "3.8"
+
 services:
-    db:
-        image: mysql:latest
-        container_name: mysql
+    quizify-api:
+        image: quizify-api:v1
+        ports:
+            - "8000:8000"
+        healthcheck:
+            test: ["CMD", "healthcheck.sh", "--connect"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
         environment:
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-            MYSQL_DATABASE: ${DB_DATABASE}
-            MYSQL_USER: ${DB_USERNAME}
-            MYSQL_PASSWORD: ${DB_PASSWORD}
+            NODE_ENV: production
+            DB_CONNECTION: mysql
+            DB_HOST: ${MYSQL_HOST}
+            DB_PORT: ${MYSQL_PORT}
+            DB_DATABASE: ${MYSQL_DATABASE}
+            DB_USERNAME: ${MYSQL_USER}
+            DB_PASSWORD: ${MYSQL_PASSWORD}
+        depends_on:
+            - mysql
+        restart: always
+
+    mysql:
+        image: mysql:8.0
+        container_name: quizify-mysql
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
         ports:
             - "3306:3306"
         volumes:
-            - db_data:/var/lib/mysql
-        restart: unless-stopped
+            - mysql_data:/var/lib/mysqlx
+        healthcheck:
+            test: ["CMD", "healthcheck.sh", "--connect"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
 
     adminer:
-        image: adminer:latest
-        container_name: adminer
+        image: adminer
+        container_name: quizify-adminer
+        restart: on-failure
         ports:
             - "8080:8080"
         depends_on:
-            - db
-        restart: unless-stopped
-
-    minio:
-        image: quay.io/minio/minio:latest
-        container_name: minio
-        ports:
-            - "9000:9000"
-            - '8900:8900'
-        environment:
-            MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-        volumes:
-            - minio_data:/data
-        command: server /data --console-address ":8900"
-        restart: unless-stopped
+            - mysql
+        profiles: ["admin"]
 
 volumes:
-    db_data:
-        driver: local
-    minio_data:
-        driver: local
+    mysql_data:
