@@ -9,6 +9,12 @@ up:
 	@$(MAKE) build
 	@echo "\033[1;34m[INFO]\033[0m Démarrage du conteneur quizify-api:v1..."
 	@docker compose up -d
+	@echo "\033[1;32m[SUCCESS]\033[0m Conteneur prêt avec base fraîchement migrée et seedée !"
+
+up-fresh:
+	@$(MAKE) build
+	@echo "\033[1;34m[INFO]\033[0m Démarrage du conteneur quizify-api:v1..."
+	@docker compose up -d
 	@$(MAKE) fresh-seed
 	@echo "\033[1;32m[SUCCESS]\033[0m Conteneur prêt avec base fraîchement migrée et seedée !"
 
