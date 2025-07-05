@@ -23,19 +23,55 @@ class TeamController extends Controller
             'name' => 'required|string|max:255',
             'organization_id' => 'required|exists:organizations,id',
         ]);
-        return Team::create($data);
+        try {
+            $team = Team::create($data);
+            return response()->json([
+                'message' => 'Équipe créée avec succès.',
+                'team' => $team
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la création de l\'équipe.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
         $team = Team::findOrFail($id);
-        $team->update($request->all());
-        return $team;
+        $data = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'organization_id' => 'sometimes|required|exists:organizations,id',
+        ]);
+        try {
+            $team->update($data);
+            return response()->json([
+                'message' => 'Équipe mise à jour avec succès.',
+                'team' => $team
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la mise à jour de l\'équipe.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id)
     {
-        Team::destroy($id);
-        return response()->json(['message' => 'Team deleted']);
+        try {
+            $deleted = Team::destroy($id);
+            if ($deleted) {
+                return response()->json(['message' => 'Équipe supprimée avec succès.']);
+            } else {
+                return response()->json(['message' => 'Aucune équipe trouvée à supprimer.'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la suppression de l\'équipe.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

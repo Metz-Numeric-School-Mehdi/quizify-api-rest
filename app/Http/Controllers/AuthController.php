@@ -90,6 +90,14 @@ class AuthController extends Controller
                 ],
                 422
             );
+        } catch (\Exception $e) {
+            return response()->json(
+                [
+                    "message" => "Erreur lors de l'inscription de l'utilisateur.",
+                    "error" => $e->getMessage(),
+                ],
+                500
+            );
         }
     }
 
@@ -102,16 +110,23 @@ class AuthController extends Controller
 
     public function signOut(Request $request)
     {
-        $user = $request->user();
-        if (!$user) {
-            return response()->json([
-                "message" => "Utilisateur non authentifié."
-            ], 401);
-        }
-        $user->tokens()->delete();
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    "message" => "Utilisateur non authentifié."
+                ], 401);
+            }
+            $user->tokens()->delete();
 
-        return response()->json([
-            "message" => "Logged out",
-        ]);
+            return response()->json([
+                "message" => "Logged out",
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Erreur lors de la déconnexion.",
+                "error" => $e->getMessage()
+            ], 500);
+        }
     }
 }

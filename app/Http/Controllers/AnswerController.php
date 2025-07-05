@@ -31,8 +31,16 @@ class AnswerController extends Controller
             'content.string' => 'Le contenu doit être une chaîne de caractères.',
             'is_correct.required' => 'La réponse doit indiquer si elle est correcte ou non.',
         ]);
-        $answer = Answer::create($data);
-        return response()->json($answer, 201);
+
+        try {
+            $answer = Answer::create($data);
+            return response()->json($answer, 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la création de la réponse.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id)
@@ -49,16 +57,35 @@ class AnswerController extends Controller
             'content.string' => 'Le contenu doit être une chaîne de caractères.',
             'is_correct.required' => 'La réponse doit indiquer si elle est correcte ou non.',
         ]);
-        $answer->update($validatedData);
-        return response()->json([
-            'message' => 'Réponse mise à jour avec succès.',
-            'answer' => $answer,
-        ], 200);
+
+        try {
+            $answer->update($validatedData);
+            return response()->json([
+                'message' => 'Réponse mise à jour avec succès.',
+                'answer' => $answer,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la mise à jour de la réponse.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id)
     {
-        Answer::destroy($id);
-        return response()->json(['message' => 'Answer deleted']);
+        try {
+            $deleted = Answer::destroy($id);
+            if ($deleted) {
+                return response()->json(['message' => 'Réponse supprimée avec succès.']);
+            } else {
+                return response()->json(['message' => 'Aucune réponse trouvée à supprimer.'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la suppression de la réponse.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

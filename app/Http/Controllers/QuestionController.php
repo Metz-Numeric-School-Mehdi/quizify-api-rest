@@ -110,10 +110,17 @@ class QuestionController extends Controller
                 "message" => "Vous n'êtes pas autorisé à supprimer cette question.",
             ], 403);
         }
-        $question->delete();
-        return response()->json([
-            "message" => "Question supprimée avec succès.",
-        ], 200);
+        try {
+            $question->delete();
+            return response()->json([
+                "message" => "Question supprimée avec succès.",
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Erreur lors de la suppression de la question.",
+                "error" => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -160,10 +167,17 @@ class QuestionController extends Controller
             "question_type_id.integer" => "Le type de question doit être un entier.",
             "question_type_id.exists" => "Le type de question sélectionné est invalide.",
         ]);
-        $question->update($validatedData);
-        return response()->json([
-            "message" => "Question mise à jour avec succès.",
-            "question" => $question,
-        ], 200);
+        try {
+            $question->update($validatedData);
+            return response()->json([
+                "message" => "Question mise à jour avec succès.",
+                "question" => $question,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Erreur lors de la mise à jour de la question.",
+                "error" => $e->getMessage(),
+            ], 500);
+        }
     }
 }
