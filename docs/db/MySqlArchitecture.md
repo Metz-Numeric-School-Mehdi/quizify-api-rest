@@ -77,7 +77,6 @@
 | status       | enum         |          | draft/published/archived |
 | user_id      | bigint       | FK       | users.id          |
 | duration     | integer      |          | Nullable          |
-| max_attempts | integer      |          | Nullable          |
 | pass_score   | integer      |          | Nullable          |
 | thumbnail    | string(255)  |          | Nullable          |
 | category_id  | bigint       | FK       | categories.id, Nullable |

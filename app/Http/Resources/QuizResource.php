@@ -23,7 +23,6 @@ class QuizResource extends JsonResource
             "level" => $this->level,
             "user_id" => $this->user_id,
             "duration" => $this->duration,
-            "max_attempts" => $this->max_attempts,
             "pass_score" => $this->pass_score,
             "thumbnail" => $this->thumbnail,
             "thumbnail_url" => $this->thumbnail

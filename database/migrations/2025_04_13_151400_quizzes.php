@@ -20,10 +20,9 @@ return new class extends Migration {
             $table->enum("status", ["draft", "published", "archived"])->default("draft");
             $table->foreignId("user_id")->constrained()->cascadeOnDelete()->notNullable();
             $table->integer("duration")->nullable();
-            $table->integer("max_attempts")->nullable();
             $table->integer("pass_score")->nullable();
             $table->string("thumbnail", 255)->nullable();
-            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
+            $table->foreignId("category_id")->constrained("categories")->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes()->index();
         });
