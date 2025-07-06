@@ -127,7 +127,6 @@ class QuizController extends Controller
             "is_public" => "boolean",
             "status" => "required|in:draft,published,archived",
             "duration" => "nullable|integer",
-            "max_attempts" => "nullable|integer",
             "pass_score" => "nullable|integer",
             "thumbnail" => "nullable|image|max:3000",
         ], [
@@ -146,10 +145,14 @@ class QuizController extends Controller
             "status.in" =>
                 "Le statut doit être l'une des valeurs suivantes : draft, published, archived.",
             "duration.integer" => "La durée doit être un entier.",
-            "max_attempts.integer" => "Le nombre maximum de tentatives doit être un entier.",
             "pass_score.integer" => "Le score de passage doit être un entier.",
             "thumbnail.max" => "La miniature ne doit pas dépasser 3000 Ko",
         ]);
+
+        // Conversion minutes → secondes
+        if (isset($validatedData['duration'])) {
+            $validatedData['duration'] = (int)$validatedData['duration'] * 60;
+        }
 
         try {
             if ($request->hasFile("thumbnail")) {
@@ -163,6 +166,8 @@ class QuizController extends Controller
 
             $quiz = $request->user()->quizzesCreated()->create($validatedData);
             $quiz->load(["level", "user", "tags", "category"]);
+            // S'assurer que duration est bien un entier dans la réponse
+            $quiz->duration = (int)$quiz->duration;
             return response()->json(new QuizResource($quiz), 201);
         } catch (\Illuminate\Database\QueryException $e) {
             // Gestion duplication slug/titre
@@ -255,7 +260,6 @@ class QuizController extends Controller
                 "is_public" => "boolean",
                 "status" => "required|in:draft,published,archived",
                 "duration" => "nullable|integer",
-                "max_attempts" => "nullable|integer",
                 "pass_score" => "nullable|integer",
                 "thumbnail" => "nullable|string|max:255",
             ], [
@@ -270,6 +274,11 @@ class QuizController extends Controller
                 "status.required" => "Le statut est obligatoire.",
             ]);
 
+            // Conversion minutes → secondes
+            if (isset($validatedData['duration'])) {
+                $validatedData['duration'] = (int)$validatedData['duration'] * 60;
+            }
+
             if ($request->has("title")) {
                 $validatedData["slug"] = Str::slug($request->input("title"));
             }
@@ -280,6 +289,9 @@ class QuizController extends Controller
             if ($request->has("tags")) {
                 $quiz->tags()->sync($request->tags);
             }
+
+            // S'assurer que duration est bien un entier dans la réponse
+            $quiz->duration = (int)$quiz->duration;
 
             return response()->json(new QuizResource($quiz), 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
