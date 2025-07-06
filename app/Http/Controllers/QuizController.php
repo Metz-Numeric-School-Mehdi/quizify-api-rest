@@ -409,4 +409,29 @@ class QuizController extends Controller
             );
         }
     }
+    /**
+     * Enregistrer le score d'une tentative de quiz pour un utilisateur.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $quizId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function storeAttempt(Request $request, $quizId)
+    {
+        $validated = $request->validate([
+            'score' => 'required|integer',
+            'max_score' => 'nullable|integer',
+        ]);
+
+        $user = $request->user();
+
+        $attempt = \App\Models\QuizAttempt::create([
+            'quiz_id' => $quizId,
+            'user_id' => $user->id,
+            'score' => $validated['score'],
+            'max_score' => $validated['max_score'] ?? null,
+        ]);
+
+        return response()->json($attempt, 201);
+    }
 }
