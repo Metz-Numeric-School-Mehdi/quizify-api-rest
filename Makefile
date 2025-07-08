@@ -5,6 +5,11 @@ build:
 	@docker build -t quizify-api:v1 .
 	@echo "\033[1;32m[SUCCESS]\033[0m Build terminé !"
 
+build-nc:
+	@echo "\033[1;34m[INFO]\033[0m Build de l'image Docker quizify-api:v1 sans cache..."
+	@docker build -t quizify-api:v1 . --no-cache
+	@echo "\033[1;32m[SUCCESS]\033[0m Build sans cache terminé !"
+
 up:
 	@$(MAKE) build
 	@echo "\033[1;34m[INFO]\033[0m Démarrage du conteneur quizify-api:v1..."

@@ -10,13 +10,94 @@ services:
             retries: 3 # Nombre de tentatives avant de considérer le service comme défaillant
             start_period: 30s # Délai avant de commencer les vérifications
         environment:
+            APP_NAME: ${APP_NAME} # Nom de l'application
+            APP_ENV: ${APP_ENV} # Environnement d'exécution
+            APP_KEY: ${APP_KEY} # Clé d'application Laravel
+            APP_DEBUG: ${APP_DEBUG} # Mode debug
+            APP_FRONTEND_URL: ${APP_FRONTEND_URL} # URL du frontend
+            APP_TIMEZONE: ${APP_TIMEZONE} # Fuseau horaire
+            APP_URL: ${APP_URL} # URL de base de l'application
+
+            APP_LOCALE: ${APP_LOCALE} # Langue principale
+            APP_FALLBACK_LOCALE: ${APP_FALLBACK_LOCALE} # Langue de secours
+            APP_FAKER_LOCALE: ${APP_FAKER_LOCALE} # Locale Faker
+
+            FILESYSTEM_DISK: ${FILESYSTEM_DISK} # Disque de stockage par défaut
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER} # Utilisateur root MinIO
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD} # Mot de passe root MinIO
+            MINIO_ENDPOINT: ${MINIO_ENDPOINT} # Endpoint MinIO
+            MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY} # Clé d'accès MinIO
+            MINIO_SECRET_KEY: ${MINIO_SECRET_KEY} # Clé secrète MinIO
+            MINIO_BUCKET: ${MINIO_BUCKET} # Bucket MinIO
+
+            APP_MAINTENANCE_DRIVER: ${APP_MAINTENANCE_DRIVER} # Driver de maintenance
+
+            PHP_CLI_SERVER_WORKERS: ${PHP_CLI_SERVER_WORKERS} # Workers PHP CLI
+
+            BCRYPT_ROUNDS: ${BCRYPT_ROUNDS} # Nombre de rounds Bcrypt
+
+            LOG_CHANNEL: ${LOG_CHANNEL} # Canal de logs
+            LOG_STACK: ${LOG_STACK} # Stack de logs
+            LOG_DEPRECATIONS_CHANNEL: ${LOG_DEPRECATIONS_CHANNEL} # Canal de logs de dépréciation
+            LOG_LEVEL: ${LOG_LEVEL} # Niveau de logs
+
+            DB_CONNECTION: ${DB_CONNECTION} # Type de base de données
+            DB_HOST: ${DB_HOST} # Hôte de la base de données
+            DB_PORT: ${DB_PORT} # Port de la base de données
+            DB_DATABASE: ${DB_DATABASE} # Nom de la base de données
+            DB_USERNAME: ${DB_USERNAME} # Utilisateur de la base de données
+            DB_PASSWORD: ${DB_PASSWORD} # Mot de passe de la base de données
+
+            MYSQL_CONNECTION: ${MYSQL_CONNECTION} # Type de connexion MySQL
+            MYSQL_HOST: ${MYSQL_HOST} # Hôte MySQL
+            MYSQL_PORT: ${MYSQL_PORT} # Port MySQL
+            MYSQL_DATABASE: ${MYSQL_DATABASE} # Nom de la base MySQL
+            MYSQL_USER: ${MYSQL_USER} # Utilisateur MySQL
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD} # Mot de passe MySQL
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Mot de passe root MySQL
+
+            SESSION_DRIVER: ${SESSION_DRIVER} # Driver de session
+            SESSION_LIFETIME: ${SESSION_LIFETIME} # Durée de session
+            SESSION_ENCRYPT: ${SESSION_ENCRYPT} # Chiffrement de session
+            SESSION_PATH: ${SESSION_PATH} # Chemin de session
+            SESSION_DOMAIN: ${SESSION_DOMAIN} # Domaine de session
+
+            BROADCAST_CONNECTION: ${BROADCAST_CONNECTION} # Connexion broadcast
+            QUEUE_CONNECTION: ${QUEUE_CONNECTION} # Connexion queue
+            CACHE_STORE: ${CACHE_STORE} # Store de cache
+            CACHE_PREFIX: ${CACHE_PREFIX} # Préfixe de cache
+
+            MEMCACHED_HOST: ${MEMCACHED_HOST} # Hôte Memcached
+
+            REDIS_CLIENT: ${REDIS_CLIENT} # Client Redis
+            REDIS_HOST: ${REDIS_HOST} # Hôte Redis
+            REDIS_PASSWORD: ${REDIS_PASSWORD} # Mot de passe Redis
+            REDIS_PORT: ${REDIS_PORT} # Port Redis
+
+            MAIL_MAILER: ${MAIL_MAILER} # Mailer
+            MAIL_SCHEME: ${MAIL_SCHEME} # Schéma mail
+            MAIL_HOST: ${MAIL_HOST} # Hôte mail
+            MAIL_PORT: ${MAIL_PORT} # Port mail
+            MAIL_USERNAME: ${MAIL_USERNAME} # Utilisateur mail
+            MAIL_PASSWORD: ${MAIL_PASSWORD} # Mot de passe mail
+            MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS} # Adresse d'expédition mail
+            MAIL_FROM_NAME: ${MAIL_FROM_NAME} # Nom d'expédition mail
+
+            AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID} # Clé AWS
+            AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY} # Clé secrète AWS
+            AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION} # Région AWS
+            AWS_BUCKET: ${AWS_BUCKET} # Bucket AWS
+            AWS_USE_PATH_STYLE_ENDPOINT: ${AWS_USE_PATH_STYLE_ENDPOINT} # Path style AWS
+
+            VITE_APP_NAME: ${VITE_APP_NAME} # Nom de l'app pour Vite
+
+            ADMIN_USERNAME: ${ADMIN_USERNAME} # Nom d'utilisateur de l'administrateur
+            ADMIN_FIRSTNAME: ${ADMIN_FIRSTNAME} # Prénom de l'administrateur
+            ADMIN_LASTNAME: ${ADMIN_LASTNAME} # Nom de famille de l'administrateur
+            ADMIN_EMAIL: ${ADMIN_EMAIL} # Email de l'administrateur
+            ADMIN_PASSWORD: ${ADMIN_PASSWORD} # Mot de passe de l'administrateur
+            ADMIN_PROFILE_PHOTO: ${ADMIN_PROFILE_PHOTO} # Photo de profil admin
             NODE_ENV: production # Définit l'environnement Node.js en production
-            DB_CONNECTION: mysql # Type de base de données utilisée
-            DB_HOST: ${MYSQL_HOST} # Hôte de la base de données (variable d'environnement)
-            DB_PORT: ${MYSQL_PORT} # Port de la base de données (variable d'environnement)
-            DB_DATABASE: ${MYSQL_DATABASE} # Nom de la base de données (variable d'environnement)
-            DB_USERNAME: ${MYSQL_USER} # Utilisateur de la base de données (variable d'environnement)
-            DB_PASSWORD: ${MYSQL_PASSWORD} # Mot de passe de la base de données (variable d'environnement)
         depends_on:
             - mysql # Démarre après le service MySQL
         networks:

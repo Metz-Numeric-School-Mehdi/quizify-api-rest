@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\QuizResource;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -19,8 +20,10 @@ class QuizController extends Controller
     {
         $query = Quiz::with(["tags", "level", "category", "user"]);
 
-        if ($request->has("mine") && $request->user()) {
-            $query->where("user_id", $request->user()->id);
+        $user = Auth::guard("sanctum")->user();
+
+        if ($request->has("mine") && $user) {
+            $query->where("user_id", $user->id);
         }
 
         $quizzes = $query->get();
@@ -34,12 +37,11 @@ class QuizController extends Controller
             );
         }
 
-        // On ne charge pas les questions/réponses dans l'index pour chaque quiz
         return response()->json(QuizResource::collection($quizzes));
     }
 
     /**
-     * Soumettre les réponses d'un utilisateur à un quiz et vérifier leur exactitude.
+    * Submit a user's answers to a quiz and check their correctness.
      *
      * @param \Illuminate\Http\Request $request
      * @param int $quizId
@@ -158,7 +160,6 @@ class QuizController extends Controller
             ]
         );
 
-        // Conversion minutes → secondes
         if (isset($validatedData["duration"])) {
             $validatedData["duration"] = (int) $validatedData["duration"] * 60;
         }
@@ -175,11 +176,9 @@ class QuizController extends Controller
 
             $quiz = $request->user()->quizzesCreated()->create($validatedData);
             $quiz->load(["level", "user", "tags", "category"]);
-            // S'assurer que duration est bien un entier dans la réponse
             $quiz->duration = (int) $quiz->duration;
             return response()->json(new QuizResource($quiz), 201);
         } catch (\Illuminate\Database\QueryException $e) {
-            // Gestion duplication slug/titre
             if ($e->errorInfo[1] == 1062) {
                 return response()->json(
                     [
@@ -300,7 +299,6 @@ class QuizController extends Controller
                 ]
             );
 
-            // Conversion minutes → secondes
             if (isset($validatedData["duration"])) {
                 $validatedData["duration"] = (int) $validatedData["duration"] * 60;
             }
@@ -316,7 +314,6 @@ class QuizController extends Controller
                 $quiz->tags()->sync($request->tags);
             }
 
-            // S'assurer que duration est bien un entier dans la réponse
             $quiz->duration = (int) $quiz->duration;
 
             return response()->json(new QuizResource($quiz), 200);
@@ -329,7 +326,6 @@ class QuizController extends Controller
                 422
             );
         } catch (\Illuminate\Database\QueryException $e) {
-            // Gestion duplication slug/titre
             if ($e->errorInfo[1] == 1062) {
                 return response()->json(
                     [
@@ -419,17 +415,17 @@ class QuizController extends Controller
     public function storeAttempt(Request $request, $quizId)
     {
         $validated = $request->validate([
-            'score' => 'required|integer',
-            'max_score' => 'nullable|integer',
+            "score" => "required|integer",
+            "max_score" => "nullable|integer",
         ]);
 
         $user = $request->user();
 
         $attempt = \App\Models\QuizAttempt::create([
-            'quiz_id' => $quizId,
-            'user_id' => $user->id,
-            'score' => $validated['score'],
-            'max_score' => $validated['max_score'] ?? null,
+            "quiz_id" => $quizId,
+            "user_id" => $user->id,
+            "score" => $validated["score"],
+            "max_score" => $validated["max_score"] ?? null,
         ]);
 
         return response()->json($attempt, 201);
