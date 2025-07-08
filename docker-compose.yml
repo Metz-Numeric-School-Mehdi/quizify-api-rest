@@ -1,84 +1,86 @@
 services:
     quizify-api:
-        image: quizify-api:v1
+        image: quizify-api:v1 # Image Docker de l'API Quizify
         ports:
-            - "8000:8000"
+            - "8000:8000" # Expose le port 8000 du conteneur sur le port 8000 de l'hôte
         healthcheck:
-            test: ["CMD", "healthcheck.sh", "--connect"]
-            interval: 10s
-            timeout: 5s
-            retries: 3
-            start_period: 30s
+            test: ["CMD", "healthcheck.sh", "--connect"] # Vérifie la santé du service via un script
+            interval: 10s # Intervalle entre chaque vérification
+            timeout: 5s # Délai d'attente pour chaque vérification
+            retries: 3 # Nombre de tentatives avant de considérer le service comme défaillant
+            start_period: 30s # Délai avant de commencer les vérifications
         environment:
-            NODE_ENV: production
-            DB_CONNECTION: mysql
-            DB_HOST: ${MYSQL_HOST}
-            DB_PORT: ${MYSQL_PORT}
-            DB_DATABASE: ${MYSQL_DATABASE}
-            DB_USERNAME: ${MYSQL_USER}
-            DB_PASSWORD: ${MYSQL_PASSWORD}
+            NODE_ENV: production # Définit l'environnement Node.js en production
+            DB_CONNECTION: mysql # Type de base de données utilisée
+            DB_HOST: ${MYSQL_HOST} # Hôte de la base de données (variable d'environnement)
+            DB_PORT: ${MYSQL_PORT} # Port de la base de données (variable d'environnement)
+            DB_DATABASE: ${MYSQL_DATABASE} # Nom de la base de données (variable d'environnement)
+            DB_USERNAME: ${MYSQL_USER} # Utilisateur de la base de données (variable d'environnement)
+            DB_PASSWORD: ${MYSQL_PASSWORD} # Mot de passe de la base de données (variable d'environnement)
         depends_on:
-            - mysql
+            - mysql # Démarre après le service MySQL
         networks:
-            - quizify-network
-        restart: always
+            - quizify-network # Connecté au réseau quizify-network
+        restart: always # Redémarre toujours le conteneur en cas d'échec
+        volumes:
+            - ./:/var/www
 
     mysql:
-        image: mysql:8.0
-        container_name: quizify-mysql
-        restart: always
+        image: mysql:8.0 # Image officielle MySQL version 8.0
+        container_name: quizify-mysql # Nom du conteneur MySQL
+        restart: always # Redémarre toujours le conteneur en cas d'échec
         environment:
-            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-            MYSQL_DATABASE: ${MYSQL_DATABASE}
-            MYSQL_USER: ${MYSQL_USER}
-            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Mot de passe root MySQL (variable d'environnement)
+            MYSQL_DATABASE: ${MYSQL_DATABASE} # Nom de la base de données à créer (variable d'environnement)
+            MYSQL_USER: ${MYSQL_USER} # Utilisateur MySQL (variable d'environnement)
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD} # Mot de passe utilisateur MySQL (variable d'environnement)
         ports:
-            - "3306:3306"
+            - "3306:3306" # Expose le port 3306 de MySQL
         volumes:
-            - mysql_data:/var/lib/mysql
+            - mysql_data:/var/lib/mysql # Persiste les données MySQL sur un volume nommé
         networks:
-            - quizify-network
+            - quizify-network # Connecté au réseau quizify-network
 
         healthcheck:
-            test: ["CMD", "healthcheck.sh", "--connect"]
-            interval: 10s
-            timeout: 5s
-            retries: 3
-            start_period: 30s
+            test: ["CMD", "healthcheck.sh", "--connect"] # Vérifie la santé du service via un script
+            interval: 10s # Intervalle entre chaque vérification
+            timeout: 5s # Délai d'attente pour chaque vérification
+            retries: 3 # Nombre de tentatives avant de considérer le service comme défaillant
+            start_period: 30s # Délai avant de commencer les vérifications
 
     adminer:
-        image: adminer
-        container_name: quizify-adminer
-        restart: on-failure
+        image: adminer # Image officielle Adminer (interface web pour gérer les bases de données)
+        container_name: quizify-adminer # Nom du conteneur Adminer
+        restart: on-failure # Redémarre le conteneur uniquement en cas d'échec
         ports:
-            - "8080:8080"
+            - "8080:8080" # Expose le port 8080 pour accéder à Adminer
         depends_on:
-            - mysql
+            - mysql # Démarre après le service MySQL
         networks:
-            - quizify-network
-        profiles: ["admin"]
+            - quizify-network # Connecté au réseau quizify-network
+        profiles: ["admin"] # Profil pour activer ce service uniquement si besoin
 
     minio:
-        image: minio/minio:latest
-        container_name: quizify-minio
-        restart: always
+        image: minio/minio:latest # Image officielle MinIO (stockage objet compatible S3)
+        container_name: quizify-minio # Nom du conteneur MinIO
+        restart: always # Redémarre toujours le conteneur en cas d'échec
         ports:
-            - "9000:9000"
-            - "9001:9001"
+            - "9000:9000" # Port d'accès à l'API MinIO
+            - "9001:9001" # Port d'accès à la console d'administration MinIO
         environment:
-            MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-        command: server /data --console-address ":9001"
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER} # Utilisateur root MinIO (variable d'environnement)
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD} # Mot de passe root MinIO (variable d'environnement)
+        command: server /data --console-address ":9001" # Commande de démarrage de MinIO avec console sur le port 9001
         networks:
-            - quizify-network
+            - quizify-network # Connecté au réseau quizify-network
         volumes:
-            - minio_data:/data
+            - minio_data:/data # Persiste les données MinIO sur un volume nommé
 
 networks:
     quizify-network:
-        external: true
-        name: quizify-network
+        external: true # Utilise un réseau Docker externe existant
+        name: quizify-network # Nom du réseau externe
 
 volumes:
-    mysql_data:
-    minio_data:
+    mysql_data: # Volume pour persister les données MySQL
+    minio_data: # Volume pour persister les données MinIO
