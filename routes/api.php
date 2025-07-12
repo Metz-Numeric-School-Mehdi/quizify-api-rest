@@ -12,6 +12,7 @@ Route::get("/quizzes", [QuizController::class, "index"]);
 Route::post("/quizzes", [QuizController::class, "store"])->middleware("auth:sanctum");
 Route::get("/quizzes/{id}", [QuizController::class, "show"]);
 Route::post("/quizzes/{quiz}/submit", [QuizController::class, "submit"])->middleware("auth:sanctum");
+Route::post("/quizzes/{quiz}/attempt", [QuizController::class, "storeAttempt"])->middleware("auth:sanctum");
 Route::delete("/quizzes/{id}", [QuizController::class, "destroy"])->middleware("auth:sanctum");
 Route::put("/quizzes/{id}", [QuizController::class, "update"])->middleware("auth:sanctum");
 

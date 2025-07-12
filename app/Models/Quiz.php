@@ -23,7 +23,6 @@ class Quiz extends Model
         "status",
         "user_id",
         "duration",
-        "max_attempts",
         "pass_score",
         "thumbnail",
         "tag_id",
