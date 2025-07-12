@@ -22,51 +22,75 @@ class AnswerController extends Controller
     {
         $data = $request->validate([
             'question_id' => 'required|exists:questions,id',
-            'content' => 'required|string',
-            'is_correct' => 'required|boolean',
+            'answers' => 'required|array|min:1',
+            'answers.*.content' => 'required|string',
+            'answers.*.is_correct' => 'required|boolean',
         ], [
             'question_id.required' => 'La question est obligatoire.',
             'question_id.exists' => 'La question sélectionnée est invalide.',
-            'content.required' => 'Le contenu est obligatoire.',
-            'content.string' => 'Le contenu doit être une chaîne de caractères.',
-            'is_correct.required' => 'La réponse doit indiquer si elle est correcte ou non.',
+            'answers.required' => 'Les réponses sont obligatoires.',
+            'answers.array' => 'Les réponses doivent être un tableau.',
+            'answers.*.content.required' => 'Le contenu de chaque réponse est obligatoire.',
+            'answers.*.is_correct.required' => 'Chaque réponse doit indiquer si elle est correcte ou non.',
         ]);
 
         try {
-            $answer = Answer::create($data);
-            return response()->json($answer, 201);
+            $createdAnswers = [];
+            foreach ($data['answers'] as $answerData) {
+                $createdAnswers[] = Answer::create([
+                    'question_id' => $data['question_id'],
+                    'content' => $answerData['content'],
+                    'is_correct' => $answerData['is_correct'],
+                ]);
+            }
+            return response()->json([
+                'message' => 'Réponses créées avec succès.',
+                'answers' => $createdAnswers,
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erreur lors de la création de la réponse.',
+                'message' => 'Erreur lors de la création des réponses.',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id = null)
     {
-        $answer = Answer::findOrFail($id);
-        $validatedData = $request->validate([
+        $data = $request->validate([
             'question_id' => 'required|exists:questions,id',
-            'content' => 'required|string',
-            'is_correct' => 'required|boolean',
+            'answers' => 'required|array|min:1',
+            'answers.*.id' => 'required|exists:answers,id',
+            'answers.*.content' => 'required|string',
+            'answers.*.is_correct' => 'required|boolean',
         ], [
             'question_id.required' => 'La question est obligatoire.',
             'question_id.exists' => 'La question sélectionnée est invalide.',
-            'content.required' => 'Le contenu est obligatoire.',
-            'content.string' => 'Le contenu doit être une chaîne de caractères.',
-            'is_correct.required' => 'La réponse doit indiquer si elle est correcte ou non.',
+            'answers.required' => 'Les réponses sont obligatoires.',
+            'answers.array' => 'Les réponses doivent être un tableau.',
+            'answers.*.id.required' => 'L\'ID de chaque réponse est obligatoire.',
+            'answers.*.id.exists' => 'La réponse sélectionnée est invalide.',
+            'answers.*.content.required' => 'Le contenu de chaque réponse est obligatoire.',
+            'answers.*.is_correct.required' => 'Chaque réponse doit indiquer si elle est correcte ou non.',
         ]);
 
         try {
-            $answer->update($validatedData);
+            $updatedAnswers = [];
+            foreach ($data['answers'] as $answerData) {
+                $answer = Answer::where('question_id', $data['question_id'])->findOrFail($answerData['id']);
+                $answer->update([
+                    'content' => $answerData['content'],
+                    'is_correct' => $answerData['is_correct'],
+                ]);
+                $updatedAnswers[] = $answer;
+            }
             return response()->json([
-                'message' => 'Réponse mise à jour avec succès.',
-                'answer' => $answer,
+                'message' => 'Réponses mises à jour avec succès.',
+                'answers' => $updatedAnswers,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erreur lors de la mise à jour de la réponse.',
+                'message' => 'Erreur lors de la mise à jour des réponses.',
                 'error' => $e->getMessage()
             ], 500);
         }
