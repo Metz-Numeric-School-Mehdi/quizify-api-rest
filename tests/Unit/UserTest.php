@@ -3,13 +3,8 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use App\Models\Quiz;
 use App\Models\User;
-use App\Models\Category;
-use App\Models\QuizLevel;
 use App\Models\Role;
-use Database\Seeders\CategorySeeder;
-use Database\Seeders\QuizLevel as SeedersQuizLevel;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
