@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
+    public $timestamps = false;
+    
     protected $fillable = ["name"];
+
 
     public function quizzes(): HasMany
     {
