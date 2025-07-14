@@ -91,6 +91,8 @@ jobs:
         run: |
           php artisan migrate:fresh --env=testing --force
           php artisan db:seed --class=RoleSeeder --env=testing --force
+          # Verify that roles have been properly created
+          php artisan tinker --execute="App\Models\Role::all()->pluck('name', 'id');"
 
       - name: Run tests
         run: php artisan test --env=testing
