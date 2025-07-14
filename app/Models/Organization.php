@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Organization extends Model
 {
+    protected $fillable = ["name"];
+    
     public function teams()
     {
         return $this->hasMany(Team::class);
