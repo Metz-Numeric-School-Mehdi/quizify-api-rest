@@ -1,66 +1,200 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🧠 Quizify API REST
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Welcome to Quizify - an interactive online quiz platform built with Laravel 12. ✨
 
-## About Laravel
+![Quizify Banner](https://via.placeholder.com/800x200?text=Quizify+API+REST)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Overview
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Quizify is a full-featured quiz application that allows users to create, share and participate in quizzes. 🚀 This repository contains the backend REST API built with Laravel 12, providing all the necessary endpoints for user authentication, quiz management, question handling, scoring, and more.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## ✅ Features
 
-## Learning Laravel
+- **🔐 Comprehensive Authentication System** - Secure user registration, login, and authorization
+- **📝 Quiz Management** - Create, update, delete, and participate in quizzes
+- **❓ Flexible Question Types** - Multiple choice, text-based, and more question formats
+- **📊 Scoring System** - Track user progress and maintain a leaderboard
+- **🏅 Player Ranking** - Competitive leaderboard system to rank players based on performance
+- **🏆 Badge System** - Reward achievements with customizable badges
+- **👥 Organizational Structure** - Manage users through organizations and teams
+- **🗂️ Quiz Categorization** - Organize quizzes by difficulty level and topic
+- **🏷️ Content Tagging** - Enhance discoverability with custom tags
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 💻 Tech Stack
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- **PHP 8.2+**
+- **Laravel 12.x**
+- **Laravel Sanctum** - API authentication
+- **MySQL/MariaDB** - Database
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🚀 Installation
 
-## Laravel Sponsors
+### Prerequisites
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- PHP 8.2 or higher
+- Composer
+- MySQL/MariaDB
+- Git
 
-### Premium Partners
+### Setup Instructions
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/quizify-api-rest.git
+   cd quizify-api-rest
+   ```
 
-## Contributing
+2. Install dependencies:
+   ```bash
+   composer install
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+3. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
 
-## Code of Conduct
+4. Configure your database connection in the `.env` file:
+   ```
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=quizify
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+5. Generate application key:
+   ```bash
+   php artisan key:generate
+   ```
 
-## Security Vulnerabilities
+6. Run migrations and seed the database:
+   ```bash
+   php artisan migrate --seed
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+7. Start the development server:
+   ```bash
+   php artisan serve
+   ```
 
-## License
+## 📚 API Documentation
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Authentication Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/signin` | User login |
+| POST | `/api/auth/signup` | User registration |
+| GET | `/api/auth/signout` | User logout |
+| GET | `/api/auth/verify` | Verify authentication |
+
+### Quiz Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/quizzes` | List all quizzes |
+| POST | `/api/quizzes` | Create a quiz |
+| GET | `/api/quizzes/{id}` | Get quiz details |
+| PUT | `/api/quizzes/{id}` | Update a quiz |
+| DELETE | `/api/quizzes/{id}` | Delete a quiz |
+| POST | `/api/quizzes/{quiz}/submit` | Submit a completed quiz |
+| POST | `/api/quizzes/{quiz}/attempt` | Create a quiz attempt |
+
+### Question & Answer Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/questions` | List all questions |
+| POST | `/api/questions` | Create a question |
+| GET | `/api/questions/{id}` | Get question details |
+| PUT | `/api/questions/{id}` | Update a question |
+| DELETE | `/api/questions/{id}` | Delete a question |
+| GET | `/api/answers` | List all answers |
+| POST | `/api/answers` | Create an answer |
+
+### User Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/user` | Get current user info |
+| POST | `/api/users/{user}/assign-badges` | Assign badges to a user |
+| GET | `/api/leaderboard` | Get user rankings |
+
+For a full list of endpoints, please check the Postman collection in the `/docs/postman` directory.
+
+## 🏗️ Project Structure
+
+```
+quizify-api-rest/
+├── app/                             # Core application code
+│   ├── Http/                        # HTTP layer
+│   │   ├── Controllers/             # API Controllers
+│   │   ├── Middleware/              # Custom middleware
+│   │   └── Resources/               # API Resources/Transformers
+│   └── Models/                      # Eloquent models
+├── database/                        # Database related files
+│   ├── factories/                   # Model factories for testing
+│   ├── migrations/                  # Database migrations
+│   └── seeders/                     # Database seeders
+├── routes/                          # Route definitions
+│   ├── api.php                      # API routes
+│   └── web.php                      # Web routes
+└── tests/                           # Automated tests
+    ├── Unit/                        # Unit tests
+    └── Feature/                     # Feature tests
+```
+
+## 🧪 Testing
+
+Run the test suite with:
+
+```bash
+php artisan test
+```
+
+## 🛠️ Makefile Commands
+
+This project includes a Makefile to simplify common development tasks:
+
+| Command | Description |
+|---------|-------------|
+| `make build` | Build the Docker image quizify-api:v1 |
+| `make build-nc` | Build the Docker image without cache |
+| `make up` | Build, start containers and run migrations |
+| `make up-fresh` | Build, start containers with fresh migration and seed |
+| `make fresh-seed` | Run fresh migrations and seed the database |
+| `make adminer` | Start Adminer service on port 8080 |
+| `make adminer-down` | Stop Adminer service |
+| `make down` | Stop Docker Compose services |
+| `make down-v` | Stop services and remove volumes |
+| `make clear-all` | Clear all Laravel caches |
+| `make help` | Display help information |
+
+Example usage:
+
+```bash
+# Start the application with a fresh database
+make up-fresh
+
+# Access database management with Adminer
+make adminer
+```
+
+## 🔄 CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment. The workflow runs tests, performs code quality checks, and ensures that all changes meet the required standards before being merged.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 📜
+
+## 🙏 Acknowledgements
+
+- [Laravel](https://laravel.com)
+- [Laravel Sanctum](https://laravel.com/docs/sanctum)
+
+---
+
+Created with ♥ by [@MehdiDiasGomes](https://github.com/MehdiDiasGomes)
