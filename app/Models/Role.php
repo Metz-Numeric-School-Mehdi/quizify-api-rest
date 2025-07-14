@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Role extends Model
 {
 
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<\Database\Factories\RoleFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
