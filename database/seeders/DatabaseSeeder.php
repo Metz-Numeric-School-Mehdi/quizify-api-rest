@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             TagSeeder::class,
             CategorySeeder::class,
-            QuizLevel::class,
+            QuizLevelSeeder::class,
             UserSeeder::class,
             QuizSeeder::class,
             QuestionTypeSeeder::class,
