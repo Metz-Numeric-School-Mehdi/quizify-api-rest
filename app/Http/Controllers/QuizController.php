@@ -4,13 +4,35 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\QuizResource;
 use App\Models\Quiz;
+use App\Models\User;
+use App\Services\LeaderboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class QuizController extends Controller
 {
+    /**
+     * The leaderboard service instance.
+     *
+     * @var LeaderboardService
+     */
+    protected $leaderboardService;
+
+    /**
+     * Create a new controller instance.
+     *
+     * @param LeaderboardService $leaderboardService
+     * @return void
+     */
+    public function __construct(LeaderboardService $leaderboardService)
+    {
+        $this->leaderboardService = $leaderboardService;
+    }
+
     /**
      * Display a listing of the quizzes.
      *
@@ -103,11 +125,23 @@ class QuizController extends Controller
                 }
             }
 
+            try {
+                \App\Models\Score::create([
+                    'user_id' => $userId,
+                    'quiz_id' => $quiz->id,
+                    'score' => $score,
+                ]);
+                $this->leaderboardService->updateUserRanking($userId);
+            } catch (\Exception $scoreException) {
+                Log::error('Failed to create score or update ranking: ' . $scoreException->getMessage());
+            }
+
             return response()->json([
                 "score" => $score,
                 "total" => count($quiz->questions),
                 "results" => $results,
             ]);
+            
         } catch (\Exception $e) {
             return response()->json(
                 [
@@ -430,4 +464,6 @@ class QuizController extends Controller
 
         return response()->json($attempt, 201);
     }
+    
+
 }
