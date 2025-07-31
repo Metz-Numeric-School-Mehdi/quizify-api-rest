@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\QuizController;
+use App\Http\Controllers\LeaderboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -27,7 +28,12 @@ Route::get("/user", function (Request $request) {
 })->middleware("auth:sanctum");
 
 Route::post("/users/{user}/assign-badges", [UserController::class, "assignBadges"])->middleware("auth:sanctum");
-Route::get("/leaderboard", [UserController::class, "leaderboard"]);
+
+// Leaderboard routes
+Route::get("/leaderboard", [LeaderboardController::class, "index"]);
+Route::get("/leaderboard/category/{categoryId}", [LeaderboardController::class, "byCategory"]);
+Route::get("/leaderboard/organization/{organizationId}", [LeaderboardController::class, "byOrganization"]);
+Route::post("/leaderboard/update-rankings", [LeaderboardController::class, "updateRankings"])->middleware("auth:sanctum");
 
 Route::get('/organizations', [App\Http\Controllers\OrganizationController::class, 'index']);
 Route::post('/organizations', [App\Http\Controllers\OrganizationController::class, 'store'])->middleware('auth:sanctum');

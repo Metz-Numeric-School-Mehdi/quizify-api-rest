@@ -10,6 +10,78 @@
   ],
   "item": [
     {
+      "name": "Leaderboard",
+      "item": [
+        {
+          "name": "Global Leaderboard",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/leaderboard", "host": ["{{base_url}}"], "path": ["api", "leaderboard"] }
+          }
+        },
+        {
+          "name": "Leaderboard By Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/leaderboard/category/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leaderboard", "category", "1"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Number of users to return"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Leaderboard By Organization",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/leaderboard/organization/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leaderboard", "organization", "1"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Number of users to return"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Rankings (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": { "raw": "{{base_url}}/api/leaderboard/update-rankings", "host": ["{{base_url}}"], "path": ["api", "leaderboard", "update-rankings"] }
+          }
+        }
+      ]
+    },
+    {
       "name": "Auth",
       "item": [
         {
@@ -67,13 +139,7 @@
             "url": { "raw": "{{base_url}}/api/user", "host": ["{{base_url}}"], "path": ["api", "user"] }
           }
         },
-        {
-          "name": "Leaderboard",
-          "request": {
-            "method": "GET",
-            "url": { "raw": "{{base_url}}/api/leaderboard", "host": ["{{base_url}}"], "path": ["api", "leaderboard"] }
-          }
-        },
+
         {
           "name": "Assign Badges",
           "request": {
