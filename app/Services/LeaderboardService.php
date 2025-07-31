@@ -29,7 +29,7 @@ class LeaderboardService
                 User::where("id", $user->id)->update(["ranking" => $rank]);
                 $rank++;
             }
-
+            Log::info("User rankings updated successfully from controller function.");
             return true;
         } catch (\Exception $e) {
             Log::error("Failed to update user rankings: " . $e->getMessage());

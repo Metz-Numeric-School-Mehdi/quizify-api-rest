@@ -157,6 +157,18 @@ services:
         volumes:
             - minio_data:/data # Persiste les données MinIO sur un volume nommé
 
+    scheduler:
+        build: .
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            - mysql
+        command: >
+            sh -c "while true; do
+            php artisan schedule:run
+            sleep 60
+            done"
+
 networks:
     quizify-network:
         external: true # Utilise un réseau Docker externe existant
