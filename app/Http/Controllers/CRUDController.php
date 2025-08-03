@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\Quiz\RepositoryInterface;
+use Illuminate\Http\Request;
 
 class CRUDController extends Controller
 {
@@ -28,9 +29,20 @@ class CRUDController extends Controller
         return response()->json($this->repository->index());
     }
 
-    public function store($request)
+    public function store(Request $request)
     {
-        return $this->repository->store($request);
+        $entity = $this->repository->store($request);
+        if ($entity) {
+            $entityInfo = $this->getEntityLabelAndGender();
+            $key = "crud.created_successfully_" . $entityInfo["gender"];
+            return response()->json(
+                [
+                    "message" => __($key, ["Entity" => $entityInfo["label"]]),
+                    "data" => $entity,
+                ],
+                201,
+            );
+        }
     }
 
     public function show($id)
@@ -43,8 +55,23 @@ class CRUDController extends Controller
         return $this->repository->update($request, $id);
     }
 
-    public function destroy($request, $id)
+    /**
+     * Get the display label and gender for the current entity.
+     *
+     * @return array
+     */
+    protected function getEntityLabelAndGender()
     {
-        return $this->repository->destroy($request, $id);
+        $class = class_basename($this->repository);
+        $entity = strtolower(str_replace("Repository", "", $class));
+
+        $labels = [
+            "quiz" => ["label" => "Quiz", "gender" => "m"],
+            "user" => ["label" => "Utilisateur", "gender" => "m"],
+            "categorie" => ["label" => "Catégorie", "gender" => "f"],
+        ];
+
+        $default = ["label" => ucfirst($entity), "gender" => "m"];
+        return $labels[$entity] ?? $default;
     }
 }

@@ -10,5 +10,5 @@ class QuizRepository extends Repository
     public function __construct()
     {
         parent::__construct(new Quiz());
-    }
+}
 }

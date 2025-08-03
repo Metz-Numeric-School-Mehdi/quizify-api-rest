@@ -9,13 +9,7 @@ use App\Http\Controllers\UserController;
 
 include base_path("routes/auth.php");
 
-Route::get("/quizzes", [QuizController::class, "index"]);
-Route::post("/quizzes", [QuizController::class, "store"])->middleware("auth:sanctum");
-Route::get("/quizzes/{id}", [QuizController::class, "show"]);
-Route::post("/quizzes/{quiz}/submit", [QuizController::class, "submit"])->middleware("auth:sanctum");
-Route::post("/quizzes/{quiz}/attempt", [QuizController::class, "storeAttempt"])->middleware("auth:sanctum");
-Route::delete("/quizzes/{id}", [QuizController::class, "destroy"])->middleware("auth:sanctum");
-Route::put("/quizzes/{id}", [QuizController::class, "update"])->middleware("auth:sanctum");
+Route::apiResource('quizzes', QuizController::class)->middleware('auth:sanctum');
 
 Route::get("/questions", [QuestionController::class, "index"]);
 Route::post("/questions", [QuestionController::class, "store"]);
