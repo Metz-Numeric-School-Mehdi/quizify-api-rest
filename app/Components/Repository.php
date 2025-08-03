@@ -33,8 +33,14 @@ abstract class Repository implements RepositoryInterface
         return $this->model->findOrFail($id);
     }
 
+    public function store($request)
+    {
+        $data = method_exists($request, "validated") ? $request->validated() : $request->all();
+        return $this->model::create($data);
+    }
+
     public function submit($request, $quizId) {}
-    public function store($request) {}
+
     public function update($request, $id) {}
     public function destroy($request, $id) {}
     public function storeAttempt($request, $quizId) {}
