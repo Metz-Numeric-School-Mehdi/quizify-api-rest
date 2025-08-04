@@ -146,6 +146,39 @@ class CRUDController extends Controller
     }
 
     /**
+     * Remove the specified entity from storage.
+     *
+     * Attempts to delete the entity via the repository and returns a JSON response.
+     *
+     * @param  Request  $request
+     * @param  int  $id
+     * @return JsonResponse
+     */
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        try {
+            $entity = $this->repository->destroy($request, $id);
+        } catch (\Exception $e) {
+            return response()->json(
+                [
+                    "message" => __("crud.not_found"),
+                ],
+                500,
+            );
+        }
+
+        $entityInfo = $this->getEntityLabelAndGender();
+        $key = "crud.deleted_successfully_" . $entityInfo["gender"];
+
+        return response()->json(
+            [
+                "message" => __($key, ["Entity" => $entityInfo["label"]]),
+            ],
+            200,
+        );
+    }
+
+    /**
      * Get the display label and gender for the current entity.
      *
      * @return array

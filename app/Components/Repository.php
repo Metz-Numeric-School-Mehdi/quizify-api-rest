@@ -52,25 +52,13 @@ abstract class Repository implements RepositoryInterface
         $model->update($data);
         return $model;
     }
-    public function destroy($request, $id) {}
+
+    public function destroy($request, $id)
+    {
+        $model = $this->model->findOrFail($id);
+        $model->delete();
+        return $model;
+    }
+
     public function storeAttempt($request, $quizId) {}
-
-    // protected function applyFilter(array $params)
-    // {
-    //     $query = $this->model->newQuery();
-    // }
-
-    // protected function setFilters(array &$params, Builder $query): void
-    // {
-    //     if (isset($params["filters"])) {
-    //         foreach ($params["filters"] as $key => $value) {
-    //             if (is_array($value)) {
-    //                 $query->whereIn($key, $value);
-    //             } else {
-    //                 $query->where($key, $value);
-    //             }
-    //         }
-    //         unset($params["filters"]);
-    //     }
-    // }
 }
