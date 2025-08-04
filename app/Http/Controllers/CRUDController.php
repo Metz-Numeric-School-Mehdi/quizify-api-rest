@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\Quiz\RepositoryInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -26,15 +27,29 @@ class CRUDController extends Controller
         $this->repository = $repository;
     }
 
-    public function index()
+    /**
+     * Display a listing of the entities.
+     *
+     * @return JsonResponse
+     */
+    public function index(): JsonResponse
     {
         return response()->json($this->repository->index());
     }
 
-    public function store(Request $request)
+    /**
+     * Store a newly created entity in storage.
+     *
+     * Validates the incoming request using the appropriate RuleStrategy,
+     * attempts to store the entity via the repository, and returns a JSON response.
+     *
+     * @param  Request  $request
+     * @return JsonResponse
+     */
+    public function store(Request $request): JsonResponse
     {
         $ruleStrategy = $this->getRuleStrategy();
-        $validator = Validator::make($request->all(), $ruleStrategy->getRules());
+        $validator = Validator::make($request->all(), $ruleStrategy->getCreateRules());
 
         if ($validator->fails()) {
             return response()->json(
@@ -72,14 +87,63 @@ class CRUDController extends Controller
         );
     }
 
-    public function show($id)
+    /**
+     * Display the specified entity.
+     *
+     * @param  int  $id
+     * @return JsonResponse
+     */
+    public function show($id): JsonResponse
     {
-        return $this->repository->show($id);
+        return response()->json($this->repository->show($id));
     }
 
-    public function update($request, $id)
+    /**
+     * Update the specified entity in storage.
+     *
+     * @param  mixed  $request
+     * @param  int  $id
+     * @return mixed
+     */
+    public function update(Request $request, int $id): JsonResponse
     {
-        return $this->repository->update($request, $id);
+        $ruleStrategy = $this->getRuleStrategy();
+        $validator = Validator::make($request->all(), $ruleStrategy->getUpdateRules());
+
+        if ($validator->fails()) {
+            return response()->json(
+                [
+                    "message" => __("crud.validation_error"),
+                    "errors" => $validator->errors(),
+                ],
+                422,
+            );
+        }
+
+        $validated = $validator->validated();
+
+        try {
+            $entity = $this->repository->update($validated, $id);
+        } catch (\Exception $e) {
+            return response()->json(
+                [
+                    "message" => __("crud.creation_error"),
+                    "error" => $e->getMessage(),
+                ],
+                500,
+            );
+        }
+
+        $entityInfo = $this->getEntityLabelAndGender();
+        $key = "crud.updated_successfully_" . $entityInfo["gender"];
+
+        return response()->json(
+            [
+                "message" => __($key, ["Entity" => $entityInfo["label"]]),
+                "data" => $entity,
+            ],
+            201,
+        );
     }
 
     /**
@@ -101,6 +165,7 @@ class CRUDController extends Controller
         $default = ["label" => ucfirst($entity), "gender" => "m"];
         return $labels[$entity] ?? $default;
     }
+
     /**
      * Get the RuleStrategy instance for the current entity.
      *

@@ -3,6 +3,8 @@
 return [
     "created_successfully_m" => ":Entity créé avec succès",
     "created_successfully_f" => ":Entity créée avec succès",
+    "updated_successfully_m" => ":Entity mis à jour avec succès",
+    "updated_successfully_f" => ":Entity mise à jour avec succès",
 
     "validation_error" => "Erreur de validation.",
     "creation_error" => "Erreur lors de la création de la ressource.",

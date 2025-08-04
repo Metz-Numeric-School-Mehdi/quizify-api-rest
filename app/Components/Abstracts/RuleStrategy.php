@@ -11,12 +11,12 @@ abstract class RuleStrategy implements RuleStrategyInterface
     /**
      * Return the minimal validation rules for the entity.
      */
-    abstract public function getPrimitiveRules(): array;
+    abstract public function getCreateRules(): array;
 
     /**
      * Return the full validation rules for the entity.
      */
-    abstract public function getRules(): array;
+    abstract public function getUpdateRules(): array;
 
     /**
      * Return the validation rules for a collection of entities.

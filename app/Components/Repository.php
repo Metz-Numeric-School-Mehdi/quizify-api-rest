@@ -33,6 +33,12 @@ abstract class Repository implements RepositoryInterface
         return $this->model->findOrFail($id);
     }
 
+    /**
+     * Store a newly created model in storage.
+     *
+     * @param array $data
+     * @return Model
+     */
     public function store(array $data): Model
     {
         return $this->model::create($data);
@@ -40,7 +46,12 @@ abstract class Repository implements RepositoryInterface
 
     public function submit($request, $quizId) {}
 
-    public function update($request, $id) {}
+    public function update($data, $id)
+    {
+        $model = $this->model->findOrFail($id);
+        $model->update($data);
+        return $model;
+    }
     public function destroy($request, $id) {}
     public function storeAttempt($request, $quizId) {}
 
