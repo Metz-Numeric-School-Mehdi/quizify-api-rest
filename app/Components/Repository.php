@@ -46,6 +46,13 @@ abstract class Repository implements RepositoryInterface
 
     public function submit($request, $quizId) {}
 
+    /**
+     * Update the specified model in storage.
+     *
+     * @param array $data
+     * @param int $id
+     * @return Model
+     */
     public function update($data, $id)
     {
         $model = $this->model->findOrFail($id);
@@ -53,6 +60,13 @@ abstract class Repository implements RepositoryInterface
         return $model;
     }
 
+    /**
+     * Remove the specified model from storage.
+     *
+     * @param mixed $request
+     * @param int $id
+     * @return Model
+     */
     public function destroy($request, $id)
     {
         $model = $this->model->findOrFail($id);
