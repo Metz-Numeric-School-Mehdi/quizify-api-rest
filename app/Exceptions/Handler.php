@@ -27,4 +27,20 @@ class Handler extends ExceptionHandler
 
         return redirect()->guest(route("login"));
     }
+
+    public function render($request, Throwable $exception)
+    {
+        if ($exception instanceof \App\Exceptions\ApiException) {
+            return response()->json(
+                [
+                    "message" => $exception->getMessage(),
+                    "errors" => $exception->getErrors(),
+                    "error_code" => $exception->getErrorCode(),
+                ],
+                422,
+            );
+        }
+
+        return parent::render($request, $exception);
+    }
 }
