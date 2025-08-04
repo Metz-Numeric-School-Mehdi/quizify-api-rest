@@ -5,10 +5,10 @@ namespace App\Repositories\Quiz;
 interface RepositoryInterface
 {
     public function index();
-    public function show($id);
-    public function store($request);
-    public function update($request, $id);
-    public function destroy($request, $id);
-    public function submit($request, $quizId);
-    public function storeAttempt($request, $quizId);
+    public function show(int $id);
+    public function store(array $data);
+    public function update($request, int $id);
+    public function destroy($request, int $id);
+    public function submit($request, int $quizId);
+    public function storeAttempt($request, int $quizId);
 }
