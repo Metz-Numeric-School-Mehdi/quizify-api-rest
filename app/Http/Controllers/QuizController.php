@@ -57,10 +57,99 @@ class QuizController extends CRUDController
         } catch (\Exception $e) {
             return response()->json(
                 [
-                    "error" => $e->getMessage(),
+                    "message" => $e->getMessage(),
                 ],
-                500,
+                500
             );
+        }
+    }
+
+    /**
+     * Search quizzes using ElasticSearch via Laravel Scout.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function search(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'q' => 'nullable|string',
+                'level_id' => 'nullable|integer|exists:quiz_levels,id',
+                'category_id' => 'nullable|integer|exists:categories,id',
+                'status' => 'nullable|in:draft,published,archived',
+                'is_public' => 'nullable|boolean',
+            ]);
+
+            $perPage = 10;
+            $searchQuery = $validated['q'] ?? '';
+
+            $builder = \App\Models\Quiz::search($searchQuery);
+
+            if (!empty($validated['level_id'])) {
+                $builder = $builder->where('level_id', $validated['level_id']);
+            }
+            if (!empty($validated['category_id'])) {
+                $builder = $builder->where('category_id', $validated['category_id']);
+            }
+            if (!empty($validated['status'])) {
+                $builder = $builder->where('status', $validated['status']);
+            }
+            if (isset($validated['is_public'])) {
+                $builder = $builder->where('is_public', (bool)$validated['is_public']);
+            }
+
+            try {
+                $quizzes = $builder->paginate($perPage);
+            } catch (\Exception $e) {
+                $query = \App\Models\Quiz::query();
+
+                if (!empty($searchQuery)) {
+                    $query->where(function($q) use ($searchQuery) {
+                        $q->where('title', 'LIKE', "%{$searchQuery}%")
+                          ->orWhere('description', 'LIKE', "%{$searchQuery}%");
+                    });
+                }
+
+                if (!empty($validated['level_id'])) {
+                    $query->where('level_id', $validated['level_id']);
+                }
+
+                if (!empty($validated['category_id'])) {
+                    $query->where('category_id', $validated['category_id']);
+                }
+
+                if (!empty($validated['status'])) {
+                    $query->where('status', $validated['status']);
+                }
+
+                if (isset($validated['is_public'])) {
+                    $query->where('is_public', (bool)$validated['is_public']);
+                }
+
+                $quizzes = $query->paginate($perPage);
+                \Illuminate\Support\Facades\Log::error('ElasticSearch error: ' . $e->getMessage());
+            }
+
+            if ($quizzes->isEmpty()) {
+                return response()->json([
+                    'message' => 'Aucun quiz trouvé pour cette recherche.'
+                ], 404);
+            }
+
+            return response()->json([
+                'data' => \App\Http\Resources\QuizResource::collection($quizzes->items()),
+                'pagination' => [
+                    'total' => $quizzes->total(),
+                    'per_page' => $quizzes->perPage(),
+                    'current_page' => $quizzes->currentPage(),
+                    'last_page' => $quizzes->lastPage(),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erreur lors de la recherche: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

@@ -9,6 +9,9 @@ use App\Http\Controllers\UserController;
 
 include base_path("routes/auth.php");
 
+// Définir la route de recherche avant la ressource API
+Route::get('/quizzes/search', [App\Http\Controllers\QuizController::class, 'search']);
+
 Route::apiResource('quizzes', QuizController::class)->middleware('auth:sanctum');
 Route::apiResource('questions', QuestionController::class)->middleware('auth:sanctum');
 

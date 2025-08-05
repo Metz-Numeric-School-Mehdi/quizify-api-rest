@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 
 class Quiz extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use Searchable;
 
     protected $fillable = [
         "title",
@@ -53,9 +55,28 @@ class Quiz extends Model
     {
         return $this->belongsToMany(Tag::class);
     }
-    
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array
+     */
+    public function toSearchableArray()
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'level_id' => $this->level_id,
+            'category_id' => $this->category_id,
+            'status' => $this->status,
+            'is_public' => $this->is_public,
+            'tags' => $this->tags->pluck('name')->toArray(),
+        ];
     }
 }
