@@ -1,7 +1,7 @@
 <?php
 namespace App\Components;
 
-use App\Repositories\Quiz\RepositoryInterface;
+use App\Components\Interfaces\RepositoryInterface;
 use Illuminate\Database\Eloquent\Model;
 
 abstract class Repository implements RepositoryInterface

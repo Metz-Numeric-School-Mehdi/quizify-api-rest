@@ -1,9 +1,9 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Components\Interfaces\RepositoryInterface;
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
-use App\Repositories\Quiz\RepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

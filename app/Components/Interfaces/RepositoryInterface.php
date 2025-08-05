@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repositories\Quiz;
+namespace App\Components\Interfaces;
 
 interface RepositoryInterface
 {

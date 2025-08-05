@@ -20,9 +20,8 @@ class QuestionRuleStrategy extends RuleStrategy
 
     /**
      * Rules for updating a question.
-     * @param int|null $id The question ID (not used for questions but kept for consistency)
      */
-    public function getUpdateRules(?int $id = null): array
+    public function getUpdateRules(): array
     {
         return [
             "quiz_id" => "sometimes|required|integer|exists:quizzes,id",
