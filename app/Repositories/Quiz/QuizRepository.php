@@ -5,12 +5,28 @@ namespace App\Repositories\Quiz;
 use App\Models\Quiz;
 use App\Components\Repository;
 use App\Models\QuestionResponse;
+use App\Services\ElasticsearchService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class QuizRepository extends Repository
 {
-    public function __construct()
+    /**
+     * The Elasticsearch service instance.
+     *
+     * @var ElasticsearchService|null
+     */
+    protected $elasticsearchService;
+
+    /**
+     * QuizRepository constructor.
+     *
+     * @param ElasticsearchService|null $elasticsearchService
+     */
+    public function __construct(?ElasticsearchService $elasticsearchService = null)
     {
         parent::__construct(new Quiz());
+        $this->elasticsearchService = $elasticsearchService ?? app(ElasticsearchService::class);
     }
 
     public function submit($user, $quizId, array $responses)
@@ -56,8 +72,88 @@ class QuizRepository extends Repository
 
         return [
             "score" => $score,
-            "total" => count($quiz->questions),
+            "total" => count($responses),
             "results" => $results,
         ];
+    }
+
+    /**
+     * Store a newly created quiz with safe Elasticsearch indexing.
+     *
+     * @param array $data
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function store(array $data): \Illuminate\Database\Eloquent\Model
+    {
+        // Ensure slug is created if not provided
+        if (!isset($data['slug']) && isset($data['title'])) {
+            $data['slug'] = Str::slug($data['title']);
+        }
+
+        // Create quiz with Scout disabled to avoid automatic indexing
+        $quiz = Quiz::withoutSyncingToSearch(function () use ($data) {
+            return parent::store($data);
+        });
+
+        // Try to index manually after successful creation
+        try {
+            $this->safelyIndexQuiz($quiz);
+        } catch (\Exception $e) {
+            Log::warning("Quiz created successfully but Elasticsearch indexing failed: " . $e->getMessage());
+        }
+
+        return $quiz;
+    }
+
+    /**
+     * Update a quiz with safe Elasticsearch indexing.
+     *
+     * @param array $data
+     * @param int $id
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function update($data, $id): \Illuminate\Database\Eloquent\Model
+    {
+        // Ensure slug is created if not provided but title is changed
+        if (!isset($data['slug']) && isset($data['title'])) {
+            $data['slug'] = Str::slug($data['title']);
+        }
+
+        // Update quiz with Scout disabled to avoid automatic indexing
+        $quiz = Quiz::withoutSyncingToSearch(function () use ($data, $id) {
+            return parent::update($data, $id);
+        });
+
+        // Try to index manually after successful update
+        try {
+            $this->safelyIndexQuiz($quiz);
+        } catch (\Exception $e) {
+            Log::warning("Quiz updated successfully but Elasticsearch indexing failed: " . $e->getMessage());
+        }
+
+        return $quiz;
+    }
+
+    /**
+     * Safely indexes a quiz in Elasticsearch.
+     *
+     * @param Quiz $quiz
+     * @return bool
+     */
+    protected function safelyIndexQuiz(Quiz $quiz): bool
+    {
+        try {
+            if ($quiz->shouldBeSearchable()) {
+                $quiz->searchable();
+                return true;
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to index quiz in Elasticsearch: " . $e->getMessage(), [
+                'id' => $quiz->id,
+                'title' => $quiz->title
+            ]);
+        }
+
+        return false;
     }
 }

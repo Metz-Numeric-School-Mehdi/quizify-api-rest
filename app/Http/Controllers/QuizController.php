@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Repositories\Quiz\QuizRepository;
 use App\Http\Controllers\CRUDController;
+use App\Http\Resources\QuizResource;
+use App\Models\Quiz;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -84,7 +86,7 @@ class QuizController extends CRUDController
             $perPage = 10;
             $searchQuery = $validated['q'] ?? '';
 
-            $builder = \App\Models\Quiz::search($searchQuery);
+            $builder = Quiz::search($searchQuery);
 
             if (!empty($validated['level_id'])) {
                 $builder = $builder->where('level_id', $validated['level_id']);
@@ -96,18 +98,18 @@ class QuizController extends CRUDController
                 $builder = $builder->where('status', $validated['status']);
             }
             if (isset($validated['is_public'])) {
-                $builder = $builder->where('is_public', (bool)$validated['is_public']);
+                $builder = $builder->where('is_public', (bool) $validated['is_public']);
             }
 
             try {
                 $quizzes = $builder->paginate($perPage);
             } catch (\Exception $e) {
-                $query = \App\Models\Quiz::query();
+                $query = Quiz::query();
 
                 if (!empty($searchQuery)) {
-                    $query->where(function($q) use ($searchQuery) {
+                    $query->where(function ($q) use ($searchQuery) {
                         $q->where('title', 'LIKE', "%{$searchQuery}%")
-                          ->orWhere('description', 'LIKE', "%{$searchQuery}%");
+                            ->orWhere('description', 'LIKE', "%{$searchQuery}%");
                     });
                 }
 
@@ -124,7 +126,7 @@ class QuizController extends CRUDController
                 }
 
                 if (isset($validated['is_public'])) {
-                    $query->where('is_public', (bool)$validated['is_public']);
+                    $query->where('is_public', (bool) $validated['is_public']);
                 }
 
                 $quizzes = $query->paginate($perPage);
@@ -138,7 +140,7 @@ class QuizController extends CRUDController
             }
 
             return response()->json([
-                'data' => \App\Http\Resources\QuizResource::collection($quizzes->items()),
+                'data' => QuizResource::collection($quizzes->items()),
                 'pagination' => [
                     'total' => $quizzes->total(),
                     'per_page' => $quizzes->perPage(),

@@ -7,6 +7,7 @@ use Elastic\Elasticsearch\ClientBuilder;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Scout\EngineManager;
 use Matchish\ScoutElasticSearch\Engines\ElasticSearchEngine;
+use App\Services\ElasticsearchService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,11 +16,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Enregistrement du client ElasticSearch
         $this->app->singleton(Client::class, function () {
             return ClientBuilder::create()
                 ->setHosts([config('scout.elasticsearch.hosts')[0]])
                 ->build();
+        });
+
+        $this->app->singleton(ElasticsearchService::class, function ($app) {
+            return new ElasticsearchService();
         });
     }
 
