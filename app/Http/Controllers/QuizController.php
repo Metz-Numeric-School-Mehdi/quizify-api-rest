@@ -140,14 +140,15 @@ class QuizController extends CRUDController
             }
 
             return response()->json([
-                'data' => QuizResource::collection($quizzes->items()),
-                'pagination' => [
+                'items' => QuizResource::collection($quizzes->items()),
+                'meta' => [
                     'total' => $quizzes->total(),
                     'per_page' => $quizzes->perPage(),
                     'current_page' => $quizzes->currentPage(),
                     'last_page' => $quizzes->lastPage(),
-                ]
+                ],
             ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erreur lors de la recherche: ' . $e->getMessage()
