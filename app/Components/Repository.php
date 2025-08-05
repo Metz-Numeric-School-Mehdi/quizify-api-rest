@@ -1,7 +1,9 @@
 <?php
 namespace App\Components;
 
+use App\Exceptions\ApiException;
 use App\Repositories\Quiz\RepositoryInterface;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 
 abstract class Repository implements RepositoryInterface
@@ -43,8 +45,6 @@ abstract class Repository implements RepositoryInterface
     {
         return $this->model::create($data);
     }
-
-    public function submit($request, $quizId) {}
 
     /**
      * Update the specified model in storage.

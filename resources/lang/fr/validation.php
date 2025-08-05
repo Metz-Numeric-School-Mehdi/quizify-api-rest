@@ -27,5 +27,6 @@ return [
         "pass_score" => "score de réussite",
         "thumbnail" => "miniature",
         "category_id" => "catégorie",
+        "content" => "contenu",
     ],
 ];

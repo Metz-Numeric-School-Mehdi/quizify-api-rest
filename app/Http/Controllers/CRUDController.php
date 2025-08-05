@@ -1,8 +1,10 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Repositories\Quiz\RepositoryInterface;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -94,7 +96,25 @@ class CRUDController extends Controller
      */
     public function show($id): JsonResponse
     {
-        return response()->json($this->repository->show($id));
+        try {
+            $entity = $this->repository->show($id);
+            return response()->json($entity);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(
+                [
+                    "message" => __("crud.not_found"),
+                ],
+                404,
+            );
+        } catch (ApiException $e) {
+            return response()->json(
+                [
+                    "message" => __("crud.unknown_error"),
+                    "error" => $e->getMessage(),
+                ],
+                500,
+            );
+        }
     }
 
     /**
@@ -163,7 +183,7 @@ class CRUDController extends Controller
                 [
                     "message" => __("crud.not_found"),
                 ],
-                500,
+                404,
             );
         }
 
@@ -192,6 +212,7 @@ class CRUDController extends Controller
             "quiz" => ["label" => "Quiz", "gender" => "m"],
             "user" => ["label" => "Utilisateur", "gender" => "m"],
             "categorie" => ["label" => "Catégorie", "gender" => "f"],
+            "question" => ["label" => "Question", "gender" => "f"],
         ];
 
         $default = ["label" => ucfirst($entity), "gender" => "m"];
@@ -212,6 +233,7 @@ class CRUDController extends Controller
             "Quiz" => "Quizzes",
             "User" => "Users",
             "Categorie" => "Categories",
+            "Question" => "Questions",
         ];
         $plural = $plurals[$entity] ?? "{$entity}s";
 

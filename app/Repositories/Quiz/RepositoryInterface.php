@@ -9,6 +9,4 @@ interface RepositoryInterface
     public function store(array $data);
     public function update(array $data, int $id);
     public function destroy($request, int $id);
-    public function submit($request, int $quizId);
-    public function storeAttempt($request, int $quizId);
 }

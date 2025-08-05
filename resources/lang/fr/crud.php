@@ -19,4 +19,6 @@ return [
     "delete_error" => "Erreur lors de la suppression de la ressource.",
     "forbidden" => "Action non autorisée.",
     "conflict" => "Conflit de données détecté.",
+    
+    
 ];

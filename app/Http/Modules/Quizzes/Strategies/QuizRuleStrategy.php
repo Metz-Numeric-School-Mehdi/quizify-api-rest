@@ -76,4 +76,20 @@ class QuizRuleStrategy extends RuleStrategy
             "*.category_id" => "required|integer|exists:categories,id",
         ];
     }
+
+    /**
+     * Get the minimal rules (for creation).
+     */
+    public function getRules(): array
+    {
+        return $this->getCreateRules();
+    }
+
+    /**
+     * Get the primitive rules (for update).
+     */
+    public function getPrimitiveRules(): array
+    {
+        return $this->getUpdateRules();
+    }
 }
