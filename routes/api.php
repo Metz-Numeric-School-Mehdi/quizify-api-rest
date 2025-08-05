@@ -12,6 +12,8 @@ include base_path("routes/auth.php");
 Route::apiResource('quizzes', QuizController::class)->middleware('auth:sanctum');
 Route::apiResource('questions', QuestionController::class)->middleware('auth:sanctum');
 
+Route::post("quizzes/{quizId}/submit", [QuizController::class, 'submit']);
+
 Route::get("/quizzes/{quizId}/questions", [QuestionController::class, "getByQuiz"]);
 
 Route::get("/user", function (Request $request) {
