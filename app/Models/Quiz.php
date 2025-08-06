@@ -41,14 +41,12 @@ class Quiz extends Model
     public function shouldBeSearchable(): bool
     {
         try {
-            // Vérification simple - utilisons une approche qui ne nécessite pas de passage par référence
             if (config('scout.driver') !== 'elasticsearch') {
                 return false;
             }
 
             $elasticsearchHost = env('ELASTICSEARCH_HOST', 'localhost:9200');
 
-            // Essaie une requête HTTP simple
             $contextOptions = [
                 'http' => [
                     'method' => 'HEAD',
@@ -57,14 +55,11 @@ class Quiz extends Model
                 ]
             ];
 
-            // Prépare l'URL et le contexte
             $url = 'http://' . $elasticsearchHost;
             $context = stream_context_create($contextOptions);
 
-            // Essaie d'accéder à ElasticSearch avec un timeout court
             $result = @file_get_contents($url, false, $context);
 
-            // Si on peut accéder au serveur ElasticSearch, on retourne true
             if ($result !== false) {
                 return true;
             }

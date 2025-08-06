@@ -9,7 +9,8 @@ use App\Http\Controllers\UserController;
 
 include base_path("routes/auth.php");
 
-Route::get('/quizzes/search', [App\Http\Controllers\QuizController::class, 'search']);
+Route::get('/quizzes/search', [QuizController::class, 'search']);
+Route::get('/quizzes/{quizId}', [QuizController::class, 'show']);
 
 Route::apiResource('quizzes', QuizController::class)->middleware('auth:sanctum');
 Route::apiResource('questions', QuestionController::class)->middleware('auth:sanctum');
@@ -64,7 +65,8 @@ Route::get('/answers', [App\Http\Controllers\AnswerController::class, 'index']);
 Route::post('/answers', [App\Http\Controllers\AnswerController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'show']);
 Route::put('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'update'])->middleware("auth:sanctum");
-Route::delete('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'destroy'])->middleware('auth:sanctum');;
+Route::delete('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'destroy'])->middleware('auth:sanctum');
+;
 
 Route::get('/question-responses', [App\Http\Controllers\QuestionResponseController::class, 'index']);
 Route::post('/question-responses', [App\Http\Controllers\QuestionResponseController::class, 'store'])->middleware('auth:sanctum');

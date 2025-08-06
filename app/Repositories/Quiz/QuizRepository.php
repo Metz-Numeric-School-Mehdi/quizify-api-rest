@@ -6,6 +6,7 @@ use App\Models\Quiz;
 use App\Components\Repository;
 use App\Models\QuestionResponse;
 use App\Services\ElasticsearchService;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -29,6 +30,46 @@ class QuizRepository extends Repository
         $this->elasticsearchService = $elasticsearchService ?? app(ElasticsearchService::class);
     }
 
+    /**
+     * The relations to eager load on every query.
+     *
+     * @var array
+     *
+     */
+    protected $withRelations = [
+        'questions.answers'
+    ];
+
+    /**
+     * Get all quizzes with their related questions and answers.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function index()
+    {
+        return $this->model->with($this->withRelations)->get();
+    }
+
+    /**
+     * Retrieve a specific quiz with its related questions and answers.
+     *
+     * @param int $id
+     * @return Model
+     */
+    public function show($id)
+    {
+        return $this->model->with($this->withRelations)->findOrFail($id);
+    }
+
+    /**
+     * Submit user responses for a quiz and calculate the score.
+     *
+     * @param \App\Models\User|null $user
+     * @param int $quizId
+     * @param array $responses
+     * @return array
+     * @throws \Exception
+     */
     public function submit($user, $quizId, array $responses)
     {
         $quiz = Quiz::with("questions.answers")->findOrFail($quizId);
@@ -54,7 +95,6 @@ class QuizRepository extends Repository
 
             QuestionResponse::create([
                 "quiz_id" => $quiz->id,
-                "user_id" => $userId, // null si guest
                 "question_id" => $question->id,
                 "answer_id" => $response["answer_id"] ?? null,
                 "user_answer" => $response["user_answer"] ?? null,
@@ -81,21 +121,18 @@ class QuizRepository extends Repository
      * Store a newly created quiz with safe Elasticsearch indexing.
      *
      * @param array $data
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return Model
      */
-    public function store(array $data): \Illuminate\Database\Eloquent\Model
+    public function store(array $data): Model
     {
-        // Ensure slug is created if not provided
         if (!isset($data['slug']) && isset($data['title'])) {
             $data['slug'] = Str::slug($data['title']);
         }
 
-        // Create quiz with Scout disabled to avoid automatic indexing
         $quiz = Quiz::withoutSyncingToSearch(function () use ($data) {
             return parent::store($data);
         });
 
-        // Try to index manually after successful creation
         try {
             $this->safelyIndexQuiz($quiz);
         } catch (\Exception $e) {
@@ -110,21 +147,18 @@ class QuizRepository extends Repository
      *
      * @param array $data
      * @param int $id
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return Model
      */
-    public function update($data, $id): \Illuminate\Database\Eloquent\Model
+    public function update($data, $id): Model
     {
-        // Ensure slug is created if not provided but title is changed
         if (!isset($data['slug']) && isset($data['title'])) {
             $data['slug'] = Str::slug($data['title']);
         }
 
-        // Update quiz with Scout disabled to avoid automatic indexing
         $quiz = Quiz::withoutSyncingToSearch(function () use ($data, $id) {
             return parent::update($data, $id);
         });
 
-        // Try to index manually after successful update
         try {
             $this->safelyIndexQuiz($quiz);
         } catch (\Exception $e) {
@@ -135,7 +169,7 @@ class QuizRepository extends Repository
     }
 
     /**
-     * Safely indexes a quiz in Elasticsearch.
+     * Safely index a quiz in Elasticsearch.
      *
      * @param Quiz $quiz
      * @return bool
@@ -157,3 +191,4 @@ class QuizRepository extends Repository
         return false;
     }
 }
+
