@@ -12,9 +12,10 @@ class AnswerRuleStrategy extends RuleStrategy
     public function getCreateRules(): array
     {
         return [
-            "question_id" => "required|integer|exists:questions,id",
-            "content" => "required|string|max:255",
-            "is_correct" => "sometimes|boolean",
+            'question_id' => 'required|integer|exists:questions,id',
+            'answers' => 'required|array|min:1',
+            'answers.*.content' => 'required|string|max:255',
+            'answers.*.is_correct' => 'sometimes|boolean',
         ];
     }
 
