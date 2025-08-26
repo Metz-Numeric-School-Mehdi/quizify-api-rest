@@ -15,7 +15,7 @@ class QuizRuleStrategy extends RuleStrategy
     {
         return [
             "title" => "required|string|max:255",
-            "slug" => "required|string|max:255|unique:quizzes,slug",
+            "slug" => "string|max:255|unique:quizzes,slug",
             "description" => "nullable|string",
             "is_public" => "required|boolean",
             "level_id" => "required|integer|exists:quiz_levels,id",
