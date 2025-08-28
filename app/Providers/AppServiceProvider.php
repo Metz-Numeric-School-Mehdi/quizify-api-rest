@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Scout\EngineManager;
 use Matchish\ScoutElasticSearch\Engines\ElasticSearchEngine;
 use App\Services\ElasticsearchService;
+use App\Services\PointsCalculationService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(ElasticsearchService::class, function ($app) {
             return new ElasticsearchService();
+        });
+
+        $this->app->singleton(PointsCalculationService::class, function ($app) {
+            return new PointsCalculationService();
         });
     }
 

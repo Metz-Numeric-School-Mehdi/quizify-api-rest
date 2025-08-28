@@ -41,28 +41,33 @@ class QuizController extends CRUDController
      * @param int $quizId
      * @return JsonResponse
      */
-    public function submit(Request $request, $quizId)
+    public function submit(Request $request, $quizId): JsonResponse
     {
         try {
+            // Validation des données de soumission
             $validated = $request->validate([
-                "responses" => "required|array",
-                "responses.*.question_id" => "required|integer|exists:questions,id",
-                "responses.*.answer_id" => "nullable|integer|exists:answers,id",
-                "responses.*.user_answer" => "nullable|string",
+                'responses' => 'required|array|min:1',
+                'responses.*.question_id' => 'required|integer|exists:questions,id',
+                'responses.*.answer_id' => 'required_without:responses.*.user_answer|integer|exists:answers,id',
+                'responses.*.user_answer' => 'required_without:responses.*.answer_id|string|max:1000',
+                'time_spent' => 'nullable|integer|min:1', // Temps passé en secondes
             ]);
 
             $user = $request->user();
+            $timeSpent = $validated['time_spent'] ?? null;
 
-            $result = $this->repository->submit($user, $quizId, $validated["responses"]);
+            $result = $this->repository->submit($user, $quizId, $validated["responses"], $timeSpent);
 
             return response()->json($result);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                "message" => "Données de soumission invalides",
+                "errors" => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return response()->json(
-                [
-                    "message" => $e->getMessage(),
-                ],
-                500
-            );
+            return response()->json([
+                "message" => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -72,7 +77,7 @@ class QuizController extends CRUDController
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function search(Request $request)
+    public function search(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([

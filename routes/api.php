@@ -15,7 +15,7 @@ Route::get('/quizzes/{quizId}', [QuizController::class, 'show']);
 Route::apiResource('quizzes', QuizController::class)->middleware('auth:sanctum');
 Route::apiResource('questions', QuestionController::class)->middleware('auth:sanctum');
 
-Route::post("quizzes/{quizId}/submit", [QuizController::class, 'submit']);
+Route::post("quizzes/{quizId}/submit", [QuizController::class, 'submit'])->middleware('auth:sanctum');
 
 Route::get("/quizzes/{quizId}/questions", [QuestionController::class, "getByQuiz"]);
 
@@ -30,6 +30,14 @@ Route::get("/leaderboard", [LeaderboardController::class, "index"]);
 Route::get("/leaderboard/category/{categoryId}", [LeaderboardController::class, "byCategory"]);
 Route::get("/leaderboard/organization/{organizationId}", [LeaderboardController::class, "byOrganization"]);
 Route::post("/leaderboard/update-rankings", [LeaderboardController::class, "updateRankings"])->middleware("auth:sanctum");
+
+// Points routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/points/user', [App\Http\Controllers\PointsController::class, 'getUserPoints']);
+    Route::get('/points/user/category/{categoryId}', [App\Http\Controllers\PointsController::class, 'getUserCategoryPoints']);
+});
+Route::get('/points/leaderboard', [App\Http\Controllers\PointsController::class, 'getLeaderboard']);
+Route::get('/points/config', [App\Http\Controllers\PointsController::class, 'getPointsConfig']);
 
 Route::get('/organizations', [App\Http\Controllers\OrganizationController::class, 'index']);
 Route::post('/organizations', [App\Http\Controllers\OrganizationController::class, 'store'])->middleware('auth:sanctum');

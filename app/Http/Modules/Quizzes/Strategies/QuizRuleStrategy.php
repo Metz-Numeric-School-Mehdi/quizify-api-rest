@@ -78,6 +78,20 @@ class QuizRuleStrategy extends RuleStrategy
     }
 
     /**
+     * Get the validation rules for submitting quiz responses.
+     *
+     */
+    public function getSubmitRules(): array
+    {
+        return [
+            "responses" => "required|array",
+            "responses.*.question_id" => "required|integer|exists:questions,id",
+            "responses.*.answer_id" => "nullable|integer|exists:answers,id",
+            "responses.*.user_answer" => "nullable|string",
+        ];
+    }
+
+    /**
      * Get the minimal rules (for creation).
      */
     public function getRules(): array
