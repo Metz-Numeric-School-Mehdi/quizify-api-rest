@@ -28,6 +28,7 @@ Basé sur le pourcentage de réussite :
 ### ⚡ Bonus de Vitesse
 - **+25 points maximum** si le quiz est terminé en moins de 50% du temps alloué
 - Bonus proportionnel à la vitesse
+- **⚠️ Important** : Aucun bonus de vitesse n'est accordé si l'utilisateur n'a aucune bonne réponse
 
 ## 🧮 Exemple de Calcul
 
@@ -41,6 +42,17 @@ Basé sur le pourcentage de réussite :
 3. Bonus performance (100%) : +50 points
 4. Bonus vitesse (10min sur 30min) : +20 points
 5. **Total : 145 points**
+
+**Quiz niveau Facile (x1.0) - 3 questions - 15 minutes**
+- Réponses correctes : 0/3
+- Temps passé : 2 minutes
+
+**Calcul :**
+1. Points de base : 0 × 10 = 0 points
+2. Multiplicateur niveau : 0 × 1.0 = 0 points
+3. Bonus performance (0%) : +0 points
+4. Bonus vitesse : +0 points (pas de bonus si 0 bonne réponse)
+5. **Total : 0 points**
 
 ## 🔧 Configuration Technique
 

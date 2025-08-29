@@ -53,7 +53,7 @@ class PointsCalculationService
 
         $performanceBonus = $this->calculatePerformanceBonus($correctAnswers, $totalQuestions);
 
-        $speedBonus = $this->calculateSpeedBonus($quiz, $timeSpent);
+        $speedBonus = $this->calculateSpeedBonus($quiz, $timeSpent, $correctAnswers);
 
         $totalPoints = (int) ($levelPoints + $performanceBonus + $speedBonus);
 
@@ -146,13 +146,15 @@ class PointsCalculationService
      *
      * @param Quiz $quiz
      * @param int|null $timeSpent
+     * @param int $correctAnswers
      * @return int
      */
-    protected function calculateSpeedBonus(Quiz $quiz, ?int $timeSpent): int
+    protected function calculateSpeedBonus(Quiz $quiz, ?int $timeSpent, int $correctAnswers): int
     {
         if (!self::POINTS_CONFIG['time_bonus']['enabled'] ||
             !$timeSpent ||
-            !$quiz->duration) {
+            !$quiz->duration ||
+            $correctAnswers === 0) {
             return 0;
         }
 

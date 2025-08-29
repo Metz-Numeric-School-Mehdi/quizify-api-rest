@@ -57,3 +57,30 @@ test('points calculation for average score', function () {
     expect($pointsData['performance_bonus'])->toBe(0);
     expect($pointsData['total_points'])->toBe(45);
 });
+
+test('no speed bonus when score is zero', function () {
+    $pointsService = new PointsCalculationService();
+
+    $quiz = new Quiz([
+        'level_id' => 2,
+        'duration' => 30
+    ]);
+    $quiz->level = new QuizLevel(['id' => 2]);
+
+    $correctAnswers = 0;
+    $totalQuestions = 5;
+    $timeSpent = 300;
+
+    $pointsData = $pointsService->calculatePoints(
+        $quiz,
+        $correctAnswers,
+        $totalQuestions,
+        $timeSpent
+    );
+
+    expect($pointsData['base_points'])->toBe(0);
+    expect($pointsData['level_points'])->toBe(0);
+    expect($pointsData['performance_bonus'])->toBe(0);
+    expect($pointsData['speed_bonus'])->toBe(0);
+    expect($pointsData['total_points'])->toBe(0);
+});
