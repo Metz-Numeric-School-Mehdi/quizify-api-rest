@@ -9,6 +9,16 @@ use Laravel\Scout\Searchable;
 class ElasticsearchService
 {
     /**
+     * Check if Elasticsearch is enabled.
+     *
+     * @return bool
+     */
+    private function isElasticsearchEnabled(): bool
+    {
+        return env('ELASTICSEARCH_ENABLED', true) !== false;
+    }
+
+    /**
      * Safely indexes a model in Elasticsearch.
      * Catches and logs exceptions without interrupting the application flow.
      *
@@ -17,7 +27,7 @@ class ElasticsearchService
      */
     public function safelyIndex(Model $model): bool
     {
-        if (!in_array(Searchable::class, class_uses_recursive($model))) {
+        if (!$this->isElasticsearchEnabled() || !in_array(Searchable::class, class_uses_recursive($model))) {
             return false;
         }
 
@@ -44,6 +54,10 @@ class ElasticsearchService
      */
     public function isAvailable(): bool
     {
+        if (!$this->isElasticsearchEnabled()) {
+            return false;
+        }
+        
         try {
             if (config('scout.driver') !== 'elasticsearch') {
                 return false;
