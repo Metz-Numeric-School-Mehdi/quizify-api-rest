@@ -6,9 +6,90 @@
   },
   "variable": [
     { "key": "base_url", "value": "http://localhost:8000" },
-    { "key": "token", "value": "" }
+    { "key": "token", "value": "" },
+    { "key": "user_id", "value": "" },
+    { "key": "quiz_id_easy", "value": "1" },
+    { "key": "quiz_id_medium", "value": "2" },
+    { "key": "quiz_id_hard", "value": "3" },
+    { "key": "category_id", "value": "1" }
   ],
   "item": [
+    {
+      "name": "Points System",
+      "item": [
+        {
+          "name": "Get User Points",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/points/user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "points", "user"]
+            }
+          }
+        },
+        {
+          "name": "Get User Category Points",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/points/user/category/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "points", "user", "category", "1"],
+              "variable": [
+                {
+                  "key": "categoryId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Points Leaderboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/points/leaderboard?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "points", "leaderboard"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of users to return (1-100)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Points Configuration",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/points/config",
+              "host": ["{{base_url}}"],
+              "path": ["api", "points", "config"]
+            }
+          }
+        }
+      ]
+    },
     {
       "name": "Leaderboard",
       "item": [
@@ -82,6 +163,117 @@
       ]
     },
     {
+      "name": "Points System Integration Tests",
+      "item": [
+        {
+          "name": "Test Points Flow - Easy Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 1,\n      \"answer_id\": 1\n    },\n    {\n      \"question_id\": 2,\n      \"answer_id\": 3\n    },\n    {\n      \"question_id\": 3,\n      \"answer_id\": 5\n    },\n    {\n      \"question_id\": 4,\n      \"answer_id\": 7\n    },\n    {\n      \"question_id\": 5,\n      \"answer_id\": 9\n    }\n  ],\n  \"time_spent\": 180\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/quizzes/1/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "quizzes", "1", "submit"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Perfect score on easy quiz gives base points', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.score).to.equal(5);",
+                  "    pm.expect(json.percentage).to.equal(100);",
+                  "    pm.expect(json.points.level_multiplier).to.equal(1.0);",
+                  "    pm.expect(json.points.performance_bonus).to.equal(50);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Points Flow - Hard Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 6,\n      \"answer_id\": 11\n    },\n    {\n      \"question_id\": 7,\n      \"answer_id\": 13\n    },\n    {\n      \"question_id\": 8,\n      \"answer_id\": 15\n    }\n  ],\n  \"time_spent\": 600\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/quizzes/3/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "quizzes", "3", "submit"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Perfect score on hard quiz gives multiplied points', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.score === 3) {",
+                  "        pm.expect(json.points.level_multiplier).to.equal(2.0);",
+                  "        pm.expect(json.points.level_points).to.be.above(json.points.base_points);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify Total Points After Tests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/points/user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "points", "user"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('User points are accumulated correctly', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.total_points).to.be.a('number');",
+                  "    pm.expect(json.total_points).to.be.above(0);",
+                  "    console.log('Total user points: ' + json.total_points);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Auth",
       "item": [
         {
@@ -111,6 +303,9 @@
                   "    var json = pm.response.json();",
                   "    if (json.token) {",
                   "        pm.environment.set(\"token\", json.token);",
+                  "    }",
+                  "    if (json.user && json.user.id) {",
+                  "        pm.environment.set(\"user_id\", json.user.id);",
                   "    }",
                   "}"
                 ]
@@ -158,11 +353,15 @@
       "name": "Quizzes",
       "item": [
         { "name": "List Quizzes", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quizzes", "host": ["{{base_url}}"], "path": ["api", "quizzes"] } } },
+        { "name": "Search Quizzes", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quizzes/search?q=test&category_id=1&level_id=2", "host": ["{{base_url}}"], "path": ["api", "quizzes", "search"], "query": [{ "key": "q", "value": "test", "description": "Search term" }, { "key": "category_id", "value": "1", "description": "Filter by category" }, { "key": "level_id", "value": "2", "description": "Filter by level" }] } } },
         { "name": "Show Quiz", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quizzes/:id", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id"], "variable": [{ "key": "id", "value": "1" }] } } },
         { "name": "Create Quiz", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "body": { "mode": "formdata", "formdata": [ { "key": "title", "value": "Quiz Test", "type": "text" }, { "key": "description", "value": "Description", "type": "text" }, { "key": "level_id", "value": "1", "type": "text" }, { "key": "category_id", "value": "1", "type": "text" }, { "key": "is_public", "value": "true", "type": "text" }, { "key": "status", "value": "published", "type": "text" }, { "key": "thumbnail", "type": "file" } ] }, "url": { "raw": "{{base_url}}/api/quizzes", "host": ["{{base_url}}"], "path": ["api", "quizzes"] } } },
         { "name": "Update Quiz", "request": { "method": "PUT", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Quiz Test Updated\",\n  \"description\": \"Description\",\n  \"level_id\": 1,\n  \"category_id\": 1,\n  \"is_public\": true,\n  \"status\": \"published\"\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id"], "variable": [{ "key": "id", "value": "1" }] } } },
         { "name": "Delete Quiz", "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/quizzes/:id", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id"], "variable": [{ "key": "id", "value": "1" }] } } },
-        { "name": "Submit Quiz", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 1,\n      \"answer_id\": 1\n    }\n  ]\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id/submit", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id", "submit"], "variable": [{ "key": "id", "value": "1" }] } } },
+        { "name": "Submit Quiz", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 1,\n      \"answer_id\": 1\n    },\n    {\n      \"question_id\": 2,\n      \"answer_id\": 3\n    }\n  ],\n  \"time_spent\": 300\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id/submit", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id", "submit"], "variable": [{ "key": "id", "value": "1" }] } }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Response contains points data', function () {", "    var json = pm.response.json();", "    pm.expect(json).to.have.property('points');", "    pm.expect(json.points).to.have.property('total_points');", "    pm.expect(json.points).to.have.property('base_points');", "    pm.expect(json.points).to.have.property('level_multiplier');", "});", "", "pm.test('Points are calculated correctly', function () {", "    var json = pm.response.json();", "    if (json.points) {", "        pm.expect(json.points.total_points).to.be.a('number');", "        pm.expect(json.points.total_points).to.be.above(0);", "    }", "});" ] } } ] },
+        { "name": "Get Quiz Questions", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quizzes/:quizId/questions", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":quizId", "questions"], "variable": [{ "key": "quizId", "value": "1" }] } } },
+        { "name": "Submit Perfect Quiz (Fast)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 1,\n      \"answer_id\": 1\n    },\n    {\n      \"question_id\": 2,\n      \"answer_id\": 3\n    },\n    {\n      \"question_id\": 3,\n      \"answer_id\": 5\n    },\n    {\n      \"question_id\": 4,\n      \"answer_id\": 7\n    },\n    {\n      \"question_id\": 5,\n      \"answer_id\": 9\n    }\n  ],\n  \"time_spent\": 300\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id/submit", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id", "submit"], "variable": [{ "key": "id", "value": "1" }] } } },
+        { "name": "Submit Average Quiz (Normal Time)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 1,\n      \"answer_id\": 1\n    },\n    {\n      \"question_id\": 2,\n      \"answer_id\": 4\n    },\n    {\n      \"question_id\": 3,\n      \"answer_id\": 5\n    }\n  ],\n  \"time_spent\": 900\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id/submit", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id", "submit"], "variable": [{ "key": "id", "value": "2" }] } } },
         { "name": "Enregistrer Score (Quiz Attempt)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"score\": 7,\n  \"max_score\": 10\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id/attempt", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id", "attempt"], "variable": [{ "key": "id", "value": "1" }] } } }
       ]
     },

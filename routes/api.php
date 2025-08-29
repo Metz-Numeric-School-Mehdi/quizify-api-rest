@@ -9,19 +9,15 @@ use App\Http\Controllers\UserController;
 
 include base_path("routes/auth.php");
 
-Route::get("/quizzes", [QuizController::class, "index"]);
-Route::post("/quizzes", [QuizController::class, "store"])->middleware("auth:sanctum");
-Route::get("/quizzes/{id}", [QuizController::class, "show"]);
-Route::post("/quizzes/{quiz}/submit", [QuizController::class, "submit"])->middleware("auth:sanctum");
-Route::post("/quizzes/{quiz}/attempt", [QuizController::class, "storeAttempt"])->middleware("auth:sanctum");
-Route::delete("/quizzes/{id}", [QuizController::class, "destroy"])->middleware("auth:sanctum");
-Route::put("/quizzes/{id}", [QuizController::class, "update"])->middleware("auth:sanctum");
+Route::get('/quizzes/search', [QuizController::class, 'search']);
+Route::get('/quizzes/{quizId}', [QuizController::class, 'show']);
 
-Route::get("/questions", [QuestionController::class, "index"]);
-Route::post("/questions", [QuestionController::class, "store"]);
-Route::get("/questions/{id}", [QuestionController::class, "show"]);
-Route::delete("/questions/{id}", [QuestionController::class, "destroy"])->middleware("auth:sanctum");
-Route::put("/questions/{id}", [QuestionController::class, "update"])->middleware("auth:sanctum");
+Route::apiResource('quizzes', QuizController::class)->middleware('auth:sanctum');
+Route::apiResource('questions', QuestionController::class)->middleware('auth:sanctum');
+
+Route::post("quizzes/{quizId}/submit", [QuizController::class, 'submit'])->middleware('auth:sanctum');
+
+Route::get("/quizzes/{quizId}/questions", [QuestionController::class, "getByQuiz"]);
 
 Route::get("/user", function (Request $request) {
     return $request->user();
@@ -34,6 +30,14 @@ Route::get("/leaderboard", [LeaderboardController::class, "index"]);
 Route::get("/leaderboard/category/{categoryId}", [LeaderboardController::class, "byCategory"]);
 Route::get("/leaderboard/organization/{organizationId}", [LeaderboardController::class, "byOrganization"]);
 Route::post("/leaderboard/update-rankings", [LeaderboardController::class, "updateRankings"])->middleware("auth:sanctum");
+
+// Points routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/points/user', [App\Http\Controllers\PointsController::class, 'getUserPoints']);
+    Route::get('/points/user/category/{categoryId}', [App\Http\Controllers\PointsController::class, 'getUserCategoryPoints']);
+});
+Route::get('/points/leaderboard', [App\Http\Controllers\PointsController::class, 'getLeaderboard']);
+Route::get('/points/config', [App\Http\Controllers\PointsController::class, 'getPointsConfig']);
 
 Route::get('/organizations', [App\Http\Controllers\OrganizationController::class, 'index']);
 Route::post('/organizations', [App\Http\Controllers\OrganizationController::class, 'store'])->middleware('auth:sanctum');
@@ -69,7 +73,8 @@ Route::get('/answers', [App\Http\Controllers\AnswerController::class, 'index']);
 Route::post('/answers', [App\Http\Controllers\AnswerController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'show']);
 Route::put('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'update'])->middleware("auth:sanctum");
-Route::delete('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'destroy'])->middleware('auth:sanctum');;
+Route::delete('/answers/{id}', [App\Http\Controllers\AnswerController::class, 'destroy'])->middleware('auth:sanctum');
+;
 
 Route::get('/question-responses', [App\Http\Controllers\QuestionResponseController::class, 'index']);
 Route::post('/question-responses', [App\Http\Controllers\QuestionResponseController::class, 'store'])->middleware('auth:sanctum');

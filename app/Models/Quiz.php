@@ -7,12 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 
 class Quiz extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use Searchable;
 
     protected $fillable = [
         "title",
@@ -28,6 +31,46 @@ class Quiz extends Model
         "tag_id",
         "category_id",
     ];
+
+    /**
+     * Determines if the model should be searchable.
+     * This method checks if Elasticsearch is available before allowing indexing.
+     *
+     * @return bool
+     */
+    public function shouldBeSearchable(): bool
+    {
+        try {
+            if (config('scout.driver') !== 'elasticsearch') {
+                return false;
+            }
+
+            $elasticsearchHost = env('ELASTICSEARCH_HOST', 'localhost:9200');
+
+            $contextOptions = [
+                'http' => [
+                    'method' => 'HEAD',
+                    'timeout' => 1,
+                    'ignore_errors' => true
+                ]
+            ];
+
+            $url = 'http://' . $elasticsearchHost;
+            $context = stream_context_create($contextOptions);
+
+            $result = @file_get_contents($url, false, $context);
+
+            if ($result !== false) {
+                return true;
+            }
+
+            Log::warning("ElasticSearch unavailable during indexing attempt: {$elasticsearchHost}");
+            return false;
+        } catch (\Exception $e) {
+            Log::error("Error checking ElasticSearch availability: " . $e->getMessage());
+            return false;
+        }
+    }
 
     public function level(): BelongsTo
     {
@@ -53,9 +96,28 @@ class Quiz extends Model
     {
         return $this->belongsToMany(Tag::class);
     }
-    
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array
+     */
+    public function toSearchableArray()
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'level_id' => $this->level_id,
+            'category_id' => $this->category_id,
+            'status' => $this->status,
+            'is_public' => $this->is_public,
+            'tags' => $this->tags->pluck('name')->toArray(),
+        ];
     }
 }
