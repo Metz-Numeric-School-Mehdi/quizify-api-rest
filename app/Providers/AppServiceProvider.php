@@ -9,7 +9,7 @@ use Laravel\Scout\EngineManager;
 use Matchish\ScoutElasticSearch\Engines\ElasticSearchEngine;
 use App\Services\ElasticsearchService;
 use App\Services\PointsCalculationService;
-use App\Services\InputSanitizationService;
+ use App\Services\InputSanitizationService;
 
 class AppServiceProvider extends ServiceProvider
 {
