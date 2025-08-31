@@ -11,10 +11,14 @@ class Kernel extends HttpKernel
      *
      * @var array
      */
-    protected $middleware = [\Illuminate\Http\Middleware\HandleCors::class];
+    protected $middleware = [
+        \App\Http\Middleware\SecurityHeadersMiddleware::class,
+        \Illuminate\Http\Middleware\HandleCors::class,
+    ];
 
     protected $middlewareGroups = [
         "web" => [
+            \App\Http\Middleware\SecurityHeadersMiddleware::class,
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
@@ -23,11 +27,18 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
 
-        "api" => ["throttle:api", \Illuminate\Routing\Middleware\SubstituteBindings::class],
+        "api" => [
+            "throttle:api",
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\XSSProtectionMiddleware::class,
+        ],
     ];
 
     protected $routeMiddleware = [
         "auth" => \App\Http\Middleware\Authenticate::class,
         "throttle" => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        "rbac" => \App\Http\Middleware\RoleBasedAccessControl::class,
+        "security.headers" => \App\Http\Middleware\SecurityHeadersMiddleware::class,
+        "xss.protection" => \App\Http\Middleware\XSSProtectionMiddleware::class,
     ];
 }
