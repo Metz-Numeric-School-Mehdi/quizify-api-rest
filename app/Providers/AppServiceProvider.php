@@ -9,6 +9,7 @@ use Laravel\Scout\EngineManager;
 use Matchish\ScoutElasticSearch\Engines\ElasticSearchEngine;
 use App\Services\ElasticsearchService;
 use App\Services\PointsCalculationService;
+ use App\Services\InputSanitizationService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(PointsCalculationService::class, function ($app) {
             return new PointsCalculationService();
+        });
+
+        $this->app->singleton(InputSanitizationService::class, function ($app) {
+            return new InputSanitizationService();
         });
     }
 
