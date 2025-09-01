@@ -11,7 +11,12 @@
     { "key": "quiz_id_easy", "value": "1" },
     { "key": "quiz_id_medium", "value": "2" },
     { "key": "quiz_id_hard", "value": "3" },
-    { "key": "category_id", "value": "1" }
+    { "key": "category_id", "value": "1" },
+    { "key": "subscription_plan_id", "value": "1" },
+    { "key": "stripe_payment_method", "value": "pm_card_visa" },
+    { "key": "stripe_price_id", "value": "price_test_premium" },
+    { "key": "session_id", "value": "" },
+    { "key": "stripe_session_id", "value": "" }
   ],
   "item": [
     {
@@ -87,6 +92,891 @@
               "path": ["api", "points", "config"]
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "Stripe Subscriptions",
+      "item": [
+        {
+          "name": "Get All Subscription Plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscription/plans",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "plans"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Response contains plans array', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('plans');",
+                  "    pm.expect(json.plans).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Plans have required fields', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.plans && json.plans.length > 0) {",
+                  "        var plan = json.plans[0];",
+                  "        pm.expect(plan).to.have.property('id');",
+                  "        pm.expect(plan).to.have.property('name');",
+                  "        pm.expect(plan).to.have.property('price');",
+                  "        pm.expect(plan).to.have.property('features');",
+                  "    }",
+                  "});",
+                  "",
+                  "// Save plan ID for next requests",
+                  "pm.test('Save first plan ID', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.plans && json.plans.length > 0) {",
+                  "        pm.environment.set('subscription_plan_id', json.plans[0].id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🛒 Checkout - Free Plan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/checkout?sub=free",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"],
+              "query": [
+                {
+                  "key": "sub",
+                  "value": "free",
+                  "description": "Plan de souscription (free, premium, business)"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Free plan activated successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json.subscription.status).to.eql('active');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🛒 Checkout - Premium Plan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/checkout?sub=premium",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"],
+              "query": [
+                {
+                  "key": "sub",
+                  "value": "premium",
+                  "description": "Plan de souscription (free, premium, business)"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Checkout session created successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('checkout_url');",
+                  "    pm.expect(json).to.have.property('session_id');",
+                  "    pm.expect(json.plan.slug).to.eql('premium');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🛒 Checkout - Business Plan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/checkout?sub=business",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"],
+              "query": [
+                {
+                  "key": "sub",
+                  "value": "business",
+                  "description": "Plan de souscription (free, premium, business)"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Checkout session created successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('checkout_url');",
+                  "    pm.expect(json).to.have.property('session_id');",
+                  "    pm.expect(json.plan.slug).to.eql('business');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Checkout - Invalid Plan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/checkout?sub=invalid",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"],
+              "query": [
+                {
+                  "key": "sub",
+                  "value": "invalid",
+                  "description": "Plan invalide pour tester la validation"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid plan returns error', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('error');",
+                  "    pm.expect(json.provided_plan).to.eql('invalid');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❓ Checkout - Missing Parameter",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missing parameter returns error', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('available_plans');",
+                  "    pm.expect(json.available_plans).to.include.members(['free', 'premium', 'business']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Free Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Free subscription created successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Premium Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 2,\n  \"payment_method\": \"{{stripe_payment_method}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Premium subscription created or requires action', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 402]);",
+                  "});",
+                  "",
+                  "pm.test('Response contains subscription data', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (pm.response.code === 200) {",
+                  "        pm.expect(json).to.have.property('subscription');",
+                  "    } else if (pm.response.code === 402) {",
+                  "        pm.expect(json).to.have.property('payment');",
+                  "        pm.expect(json.payment).to.have.property('intent_client_secret');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current Subscription",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscription/current",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "current"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Current subscription retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test('Subscription data contains plan info', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data) {",
+                  "        pm.expect(json.data).to.have.property('plan');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "✅ Confirm Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_id\": \"cs_test_your_session_id_here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/confirm-payment",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "confirm-payment"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Payment confirmed successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('plan');",
+                  "    pm.expect(json).to.have.property('subscription_status');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Swap Subscription Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/swap",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "swap"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Subscription plan swapped successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscription/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "cancel"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Subscription cancelled successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json.message).to.include('annulé');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resume Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscription/resume",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "resume"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Subscription resumed successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Billing Portal URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscription/billing-portal",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "billing-portal"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Billing portal URL generated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('url');",
+                  "    pm.expect(json.url).to.include('billing.stripe.com');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Stripe Cards - Successful Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 2,\n  \"payment_method\": \"pm_card_visa\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Visa card payment successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Stripe Cards - 3D Secure Required",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 2,\n  \"payment_method\": \"pm_card_threeDSecure2Required\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('3D Secure authentication required', function () {",
+                  "    pm.response.to.have.status(402);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('payment');",
+                  "    pm.expect(json.payment).to.have.property('intent_client_secret');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Stripe Cards - Declined Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 2,\n  \"payment_method\": \"pm_card_chargeDeclined\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Payment declined as expected', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Subscription Limits Testing",
+      "item": [
+        {
+          "name": "Create Quiz (Test Limits)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Quiz for Limits\",\n  \"description\": \"Testing subscription limits\",\n  \"level_id\": 1,\n  \"category_id\": 1,\n  \"is_public\": true,\n  \"status\": \"published\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/quizzes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "quizzes"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Quiz creation respects subscription limits', function () {",
+                  "    // Should succeed if under limit, fail with 403 if over limit",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 403]);",
+                  "});",
+                  "",
+                  "pm.test('Limit exceeded response format', function () {",
+                  "    if (pm.response.code === 403) {",
+                  "        var json = pm.response.json();",
+                  "        pm.expect(json).to.have.property('current_count');",
+                  "        pm.expect(json).to.have.property('max_allowed');",
+                  "        pm.expect(json).to.have.property('upgrade_required');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Access Analytics (Test Premium Feature)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "dashboard"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Analytics access based on subscription plan', function () {",
+                  "    // Should succeed for Premium/Business, fail with 403 for Free",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});",
+                  "",
+                  "pm.test('Premium feature restriction message', function () {",
+                  "    if (pm.response.code === 403) {",
+                  "        var json = pm.response.json();",
+                  "        pm.expect(json.message).to.include('plan');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -332,7 +1222,28 @@
             "method": "GET",
             "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
             "url": { "raw": "{{base_url}}/api/user", "host": ["{{base_url}}"], "path": ["api", "user"] }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('User profile contains subscription plan details', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('subscription_plan_id');",
+                  "    pm.expect(json).to.have.property('subscription_plan');",
+                  "    if (json.subscription_plan) {",
+                  "        pm.expect(json.subscription_plan).to.have.property('name');",
+                  "        pm.expect(json.subscription_plan).to.have.property('slug');",
+                  "        pm.expect(json.subscription_plan).to.have.property('features');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
 
         {
