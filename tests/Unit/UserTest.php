@@ -16,10 +16,11 @@ use Database\Seeders\CategorySeeder;
 use Database\Seeders\QuizLevelSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 /**
  * User model unit tests.
- * 
+ *
  * This test class verifies the core functionality of the User model,
  * including creation, relationships, authentication, and profile management.
  */
@@ -29,20 +30,20 @@ class UserTest extends TestCase
 
     /**
      * Setup the test environment.
-     * 
+     *
      * Seeds the database with necessary data for testing user functionality,
      * including roles, badges, and other required dependencies.
-     * 
+     *
      * @return void
      */
     protected function setUp(): void
     {
         parent::setUp();
-    
+
         try {
             // Ensure roles exist before running other seeders
             $this->seed(RoleSeeder::class);
-            
+
             // Run other seeders
             $this->seed([
                 BadgeSeeder::class,
@@ -57,12 +58,12 @@ class UserTest extends TestCase
 
     /**
      * Test creating a user with basic attributes and role relationship.
-     * 
+     *
      * Verifies that a user can be created and properly associated with a role.
      *
-     * @test
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_creates_a_user()
     {
         try {
@@ -71,13 +72,13 @@ class UserTest extends TestCase
                 ["name" => "admin"],
                 ["description" => "Administrateur avec accès complet"]
             );
-            
+
             // Force role ID for CI/CD compatibility
             if ($role->id != 1) {
                 if (config('database.default') === 'mysql') {
-                    \DB::statement("UPDATE roles SET id = 1 WHERE name = 'admin'");
+                    DB::statement("UPDATE roles SET id = 1 WHERE name = 'admin'");
                 } elseif (config('database.default') === 'sqlite') {
-                    \DB::update("UPDATE roles SET id = ? WHERE name = ?", [1, 'admin']);
+                    DB::update("UPDATE roles SET id = ? WHERE name = ?", [1, 'admin']);
                 }
                 $role = Role::find(1) ?? $role;
             }
@@ -87,7 +88,7 @@ class UserTest extends TestCase
             $role->id = 1;
             $role->name = 'admin';
         }
-        
+
         $user = User::factory()->create([
             "role_id" => $role->id,
         ]);
@@ -99,10 +100,10 @@ class UserTest extends TestCase
 
         $this->assertInstanceOf(User::class, $user);
     }
-    
+
     /**
      * Test the password hashing functionality.
-     * 
+     *
      * Verifies that user passwords are properly hashed when set.
      *
      * @test
@@ -111,20 +112,20 @@ class UserTest extends TestCase
     public function it_hashes_user_password()
     {
         $plainPassword = 'secret_password';
-        
+
         try {
             // Get user role or create it if not exists
             $role = Role::firstOrCreate(
                 ["name" => "user"],
                 ["description" => "Utilisateur standard"]
             );
-            
+
             // Force role ID for CI/CD compatibility
             if ($role->id != 2) {
                 if (config('database.default') === 'mysql') {
-                    \DB::statement("UPDATE roles SET id = 2 WHERE name = 'user'");
+                    DB::statement("UPDATE roles SET id = 2 WHERE name = 'user'");
                 } elseif (config('database.default') === 'sqlite') {
-                    \DB::update("UPDATE roles SET id = ? WHERE name = ?", [2, 'user']);
+                    DB::update("UPDATE roles SET id = ? WHERE name = ?", [2, 'user']);
                 }
                 $role = Role::find(2) ?? $role;
             }
@@ -134,22 +135,22 @@ class UserTest extends TestCase
             $role->id = 2;
             $role->name = 'user';
         }
-        
+
         $user = User::factory()->create([
             'password' => $plainPassword,
             'role_id' => $role->id
         ]);
-        
+
         // Check that the password is hashed
         $this->assertNotEquals($plainPassword, $user->password);
-        
+
         // If you have access to Hash::check, you could also verify the hash works
         $this->assertTrue(Hash::check($plainPassword, $user->password));
     }
-    
+
     /**
      * Test user relationship with badges.
-     * 
+     *
      * Verifies that badges can be assigned to users through the many-to-many relationship.
      *
      * @test
@@ -162,22 +163,22 @@ class UserTest extends TestCase
             $user = User::factory()->withRole('user')->create();
             // Utilisons les badges créés par le seeder (il n'y en a que 2)
             $badges = Badge::all();
-            
+
             // Skip test if no badges available (could happen in CI environment)
             if ($badges->isEmpty()) {
                 $this->markTestSkipped('No badges available for testing');
                 return;
             }
-            
+
             foreach ($badges as $badge) {
                 $user->badges()->attach($badge->id);
             }
-            
+
             // Rechargeons la relation pour être sûr d'avoir les données à jour
             $user->load('badges');
-            
+
             $this->assertCount($badges->count(), $user->badges);
-            
+
             foreach ($badges as $badge) {
                 $this->assertTrue($user->badges->contains($badge->id));
             }
@@ -185,10 +186,10 @@ class UserTest extends TestCase
             $this->markTestSkipped('Database setup issue: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Test user relationship with created quizzes.
-     * 
+     *
      * Verifies that users can create quizzes and access them through the relationship.
      *
      * @test
@@ -201,13 +202,13 @@ class UserTest extends TestCase
             $user = User::factory()->admin()->create();
             $category = \App\Models\Category::first();
             $level = \App\Models\QuizLevel::first();
-            
+
             // Skip test if required data is missing
             if (!$category || !$level) {
                 $this->markTestSkipped('Required quiz categories or levels not found');
                 return;
             }
-        
+
         // Create 3 quizzes for the user
         for ($i = 0; $i < 3; $i++) {
             Quiz::create([
@@ -223,16 +224,16 @@ class UserTest extends TestCase
                 'category_id' => $category->id,
             ]);
         }
-        
+
         $this->assertCount(3, $user->quizzesCreated);
         } catch (\Exception $e) {
             $this->markTestSkipped('Database error: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Test user relationship with organizations and teams.
-     * 
+     *
      * Verifies that users can be associated with organizations and teams.
      *
      * @test
@@ -244,30 +245,30 @@ class UserTest extends TestCase
             $organization = new Organization();
             $organization->name = 'Test Organization';
             $organization->save();
-            
+
             $team = new Team();
             $team->name = 'Test Team';
             $team->organization_id = $organization->id;
             $team->save();
-        
+
             $user = User::factory()->create([
                 'organization_id' => $organization->id,
                 'team_id' => $team->id
             ]);
-            
+
             $this->assertInstanceOf(Organization::class, $user->organization);
             $this->assertEquals('Test Organization', $user->organization->name);
-            
+
             $this->assertInstanceOf(Team::class, $user->team);
             $this->assertEquals('Test Team', $user->team->name);
         } catch (\Exception $e) {
             $this->markTestSkipped('Organization/team test error: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Test soft deleting users.
-     * 
+     *
      * Verifies that when a user is deleted, they are soft deleted instead of
      * being completely removed from the database.
      *
@@ -281,19 +282,19 @@ class UserTest extends TestCase
             'email' => 'test@example.com',
             'username' => 'testuser'
         ]);
-        
+
         $userId = $user->id;
         $user->delete();
-        
+
         // User should be soft deleted
         $this->assertSoftDeleted('users', ['id' => $userId]);
-        
+
         // Should not be able to create a new user with the same unique fields
         $newUser = User::factory()->make([
             'email' => 'test@example.com',
             'username' => 'testuser'
         ]);
-        
+
         // Expect exception when trying to save a user with the same unique fields
         $this->expectException(\Illuminate\Database\QueryException::class);
         $newUser->save();
