@@ -53,6 +53,11 @@ clear-all:
 	@docker compose exec quizify-api php artisan optimize:clear
 	@echo "\033[1;32m[SUCCESS]\033[0m Tous les caches Laravel ont été nettoyés !"
 
+test:
+	@echo "\033[1;34m[INFO]\033[0m Exécution des tests PHPUnit dans le conteneur quizify-api..."
+	php artisan test
+	@echo "\033[1;32m[SUCCESS]\033[0m Tests PHPUnit terminés !"
+
 help:
 	@echo ""
 	@echo "\033[1;33mCommandes disponibles :\033[0m"
@@ -64,5 +69,6 @@ help:
 	@echo "  down          : Arrête les services Docker Compose"
 	@echo "  down-v        : Arrête les services Docker Compose et supprime les volumes"
 	@echo "  clear-all     : Nettoie tous les caches Laravel (cache, config, route, view)"
+	@echo "  test          : Exécute les tests PHPUnit"
 	@echo "  help          : Affiche cette aide"
 	@echo ""
