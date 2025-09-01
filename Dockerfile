@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libzip-dev \
     libcurl4-openssl-dev \
+    libicu-dev \
+    pkg-config \
     zip \
     unzip \
     default-mysql-client
