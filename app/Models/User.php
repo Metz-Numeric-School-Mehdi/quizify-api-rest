@@ -12,10 +12,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Cashier\Billable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, HasApiTokens;
+    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, Billable;
 
     protected $fillable = [
         "username",
@@ -27,6 +28,7 @@ class User extends Authenticatable
         "profile_photo",
         "team_id",
         "organization_id",
+        "subscription_plan_id",
     ];
 
     public function role(): BelongsTo
@@ -67,6 +69,11 @@ class User extends Authenticatable
     public function scores(): HasMany
     {
         return $this->hasMany(Score::class);
+    }
+
+    public function subscriptionPlan(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionPlan::class);
     }
 
     protected $hidden = ["password", "remember_token"];
