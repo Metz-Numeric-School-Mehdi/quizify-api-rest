@@ -40,5 +40,6 @@ class Kernel extends HttpKernel
         "rbac" => \App\Http\Middleware\RoleBasedAccessControl::class,
         "security.headers" => \App\Http\Middleware\SecurityHeadersMiddleware::class,
         "xss.protection" => \App\Http\Middleware\XSSProtectionMiddleware::class,
+        "subscription.limits" => \App\Http\Middleware\CheckSubscriptionLimits::class,
     ];
 }
