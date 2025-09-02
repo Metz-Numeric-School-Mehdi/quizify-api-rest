@@ -16,7 +16,7 @@ class AuthController extends Controller
             "password" => "required",
         ]);
 
-        $user = User::where("email", $data["email"])->first();
+        $user = User::with('subscriptionPlan')->where("email", $data["email"])->first();
 
         if (!$user || !Hash::check($data["password"], $user->password)) {
             return response()->json(

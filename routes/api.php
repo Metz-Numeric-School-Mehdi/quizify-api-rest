@@ -12,26 +12,24 @@ include base_path("routes/auth.php");
 Route::get('/quizzes/search', [QuizController::class, 'search']);
 Route::get('/quizzes/{quizId}', [QuizController::class, 'show']);
 
-Route::apiResource('quizzes', QuizController::class)->middleware('auth:sanctum');
-Route::apiResource('questions', QuestionController::class)->middleware('auth:sanctum');
+Route::apiResource('quizzes', QuizController::class)->middleware(['auth:sanctum', 'subscription.limits:quiz_creation']);
+Route::apiResource('questions', QuestionController::class)->middleware(['auth:sanctum', 'subscription.limits:question_creation']);
 
-Route::post("quizzes/{quizId}/submit", [QuizController::class, 'submit'])->middleware('auth:sanctum');
+Route::post("quizzes/{quizId}/submit", [QuizController::class, 'submit'])->middleware(['auth:sanctum', 'subscription.limits:quiz_participation']);
 
 Route::get("/quizzes/{quizId}/questions", [QuestionController::class, "getByQuiz"]);
 
 Route::get("/user", function (Request $request) {
-    return $request->user();
+    return $request->user()->load('subscriptionPlan');
 })->middleware("auth:sanctum");
 
 Route::post("/users/{user}/assign-badges", [UserController::class, "assignBadges"])->middleware("auth:sanctum");
 
-// Leaderboard routes
 Route::get("/leaderboard", [LeaderboardController::class, "index"]);
 Route::get("/leaderboard/category/{categoryId}", [LeaderboardController::class, "byCategory"]);
 Route::get("/leaderboard/organization/{organizationId}", [LeaderboardController::class, "byOrganization"]);
 Route::post("/leaderboard/update-rankings", [LeaderboardController::class, "updateRankings"])->middleware("auth:sanctum");
 
-// Points routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/points/user', [App\Http\Controllers\PointsController::class, 'getUserPoints']);
     Route::get('/points/user/category/{categoryId}', [App\Http\Controllers\PointsController::class, 'getUserCategoryPoints']);
@@ -83,3 +81,22 @@ Route::put('/question-responses/{id}', [App\Http\Controllers\QuestionResponseCon
 Route::delete('/question-responses/{id}', [App\Http\Controllers\QuestionResponseController::class, 'destroy']);
 Route::get('/quiz-levels', [App\Http\Controllers\QuizLevelController::class, 'index']);
 Route::get('/categories', [App\Http\Controllers\CategoryController::class, 'index']);
+
+Route::get('/subscription/plans', [App\Http\Controllers\SubscriptionController::class, 'plans']);
+
+Route::get('/subscription/success', [App\Http\Controllers\SubscriptionController::class, 'success']);
+Route::get('/subscription/cancel', [App\Http\Controllers\SubscriptionController::class, 'cancelled']);
+
+Route::get('/checkout', [App\Http\Controllers\SubscriptionController::class, 'checkout'])->middleware('auth:sanctum');
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/subscription/create', [App\Http\Controllers\SubscriptionController::class, 'createSubscription']);
+    Route::post('/subscription/confirm-payment', [App\Http\Controllers\SubscriptionController::class, 'confirmPayment']);
+    Route::get('/subscription/current', [App\Http\Controllers\SubscriptionController::class, 'currentSubscription']);
+    Route::post('/subscription/cancel', [App\Http\Controllers\SubscriptionController::class, 'cancelSubscription']);
+    Route::post('/subscription/swap', [App\Http\Controllers\SubscriptionController::class, 'swapSubscription']);
+    Route::post('/subscription/sync', [App\Http\Controllers\SubscriptionController::class, 'syncSubscription']);
+    Route::get('/subscription/billing-portal', [App\Http\Controllers\SubscriptionController::class, 'billingPortal']);
+});
+
+Route::post('/webhook/stripe', [App\Http\Controllers\SubscriptionController::class, 'handleWebhook']);

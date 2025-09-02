@@ -1,169 +1,398 @@
-# 🧠 Quizify API REST
+# Quizify API REST
 
-Welcome to Quizify - an interactive online quiz platform built with Laravel 12. ✨
+Plateforme de quiz interactive complète construite avec Laravel 12 et intégration Stripe.
 
 ![Quizify Banner](https://via.placeholder.com/800x200?text=Quizify+API+REST)
 
-## Overview
+## Vue d'ensemble
 
-Quizify is a full-featured quiz application that allows users to create, share and participate in quizzes. 🚀 This repository contains the backend REST API built with Laravel 12, providing all the necessary endpoints for user authentication, quiz management, question handling, scoring, and more.
+Quizify est une application de quiz complète qui permet aux utilisateurs de créer, partager et participer à des quiz avec un système d'abonnement Stripe intégré. Ce repository contient l'API REST backend construite avec Laravel 12, fournissant tous les endpoints nécessaires pour l'authentification, la gestion des quiz, le système de scoring, les abonnements et plus encore.
 
-## ✅ Features
+## Fonctionnalités
 
-- **🔐 Comprehensive Authentication System** - Secure user registration, login, and authorization
-- **📝 Quiz Management** - Create, update, delete, and participate in quizzes
-- **❓ Flexible Question Types** - Multiple choice, text-based, and more question formats
-- **📊 Scoring System** - Track user progress and maintain a leaderboard
-- **🏅 Player Ranking** - Competitive leaderboard system to rank players based on performance
-- **🏆 Badge System** - Reward achievements with customizable badges
-- **👥 Organizational Structure** - Manage users through organizations and teams
-- **🗂️ Quiz Categorization** - Organize quizzes by difficulty level and topic
-- **🏷️ Content Tagging** - Enhance discoverability with custom tags
+- **Système d'authentification complet** - Inscription, connexion et autorisation sécurisées
+- **Gestion des quiz** - Créer, modifier, supprimer et participer aux quiz
+- **Types de questions flexibles** - Choix multiples, texte libre et autres formats
+- **Système de scoring** - Suivi des progrès et classement des utilisateurs
+- **Classement des joueurs** - Système de leaderboard compétitif
+- **Système de badges** - Récompenses d'achievements personnalisables
+- **Structure organisationnelle** - Gestion des utilisateurs via organisations et équipes
+- **Catégorisation des quiz** - Organisation par niveau de difficulté et thématique
+- **Système de tags** - Amélioration de la découvrabilité avec tags personnalisés
+- **Module Stripe complet** - Trois plans d'abonnement avec paiements automatisés
+- **Limitations automatiques** - Contrôle d'accès selon les plans d'abonnement
+- **Webhooks Stripe** - Synchronisation automatique des abonnements
 
-## 💻 Tech Stack
+## Stack technique
 
 - **PHP 8.2+**
 - **Laravel 12.x**
-- **Laravel Sanctum** - API authentication
-- **MySQL/MariaDB** - Database
+- **Laravel Sanctum** - Authentification API
+- **Laravel Cashier** - Intégration Stripe
+- **Stripe** - Paiements et abonnements
+- **MySQL/MariaDB** - Base de données
+- **Elasticsearch** - Recherche avancée (optionnel)
+- **Docker** - Conteneurisation
+- **Pest** - Tests modernes
 
-## 🚀 Installation
+## Installation
 
-### Prerequisites
+### Prérequis
 
-- PHP 8.2 or higher
+- PHP 8.2 ou supérieur
 - Composer
 - MySQL/MariaDB
+- Docker & Docker Compose (recommandé)
+- Stripe CLI (pour le développement avec webhooks)
 - Git
 
-### Setup Instructions
+### Installation avec Docker (Recommandée)
 
-1. Clone the repository:
+1. Cloner le repository :
    ```bash
    git clone https://github.com/yourusername/quizify-api-rest.git
    cd quizify-api-rest
    ```
 
-2. Install dependencies:
-   ```bash
-   composer install
-   ```
-
-3. Copy the example environment file:
+2. Copier la configuration :
    ```bash
    cp .env.example .env
    ```
 
-4. Configure your database connection in the `.env` file:
+3. Configurer les variables Stripe dans `.env` :
+   ```bash
+   STRIPE_KEY=pk_test_...
+   STRIPE_SECRET=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+
+4. Démarrer avec base fraîche :
+   ```bash
+   make up-fresh
+   ```
+
+5. L'application est accessible sur http://localhost:8000
+
+### Installation manuelle
+
+1. Cloner le repository :
+   ```bash
+   git clone https://github.com/yourusername/quizify-api-rest.git
+   cd quizify-api-rest
+   ```
+
+2. Installer les dépendances :
+   ```bash
+   composer install
+   ```
+
+3. Copier le fichier d'environnement :
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Configurer la base de données dans `.env` :
    ```
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
    DB_PORT=3306
    DB_DATABASE=quizify
    DB_USERNAME=root
-   DB_PASSWORD=
+   DB_PASSWORD=password
    ```
 
-5. Generate application key:
+5. Configurer Stripe dans `.env` :
+   ```
+   STRIPE_KEY=pk_test_...
+   STRIPE_SECRET=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+
+6. Générer la clé d'application :
    ```bash
    php artisan key:generate
    ```
 
-6. Run migrations and seed the database:
+7. Exécuter les migrations et seeders :
    ```bash
-   php artisan migrate --seed
+   php artisan migrate:fresh --seed
    ```
 
-7. Start the development server:
+8. Démarrer le serveur :
    ```bash
    php artisan serve
    ```
 
-## 📚 API Documentation
+### Configuration des webhooks Stripe (Développement)
 
-### Authentication Endpoints
+1. Installer Stripe CLI :
+   ```bash
+   # macOS
+   brew install stripe/stripe-cli/stripe
+   
+   # Windows/Linux
+   # Voir : https://stripe.com/docs/stripe-cli
+   ```
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/signin` | User login |
-| POST | `/api/auth/signup` | User registration |
-| GET | `/api/auth/signout` | User logout |
-| GET | `/api/auth/verify` | Verify authentication |
+2. Se connecter à Stripe :
+   ```bash
+   stripe login
+   ```
 
-### Quiz Endpoints
+3. Démarrer l'écoute des webhooks :
+   ```bash
+   stripe listen --forward-to localhost:8000/api/webhook/stripe --events checkout.session.completed,customer.subscription.updated,invoice.payment_succeeded
+   ```
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/quizzes` | List all quizzes |
-| POST | `/api/quizzes` | Create a quiz |
-| GET | `/api/quizzes/{id}` | Get quiz details |
-| PUT | `/api/quizzes/{id}` | Update a quiz |
-| DELETE | `/api/quizzes/{id}` | Delete a quiz |
+4. Copier le webhook secret affiché et l'ajouter dans `.env` :
+   ```bash
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+
+### Commandes Makefile disponibles
+
+```bash
+make build        # Build de l'image Docker
+make up           # Démarrage avec migrations
+make up-fresh     # Démarrage avec base fraîche
+make fresh-seed   # Migration fresh + seed
+make adminer      # Interface web base de données
+make down         # Arrêt des services
+make clear-all    # Nettoyage cache Laravel
+```
+## Documentation API
+
+### Endpoints d'authentification
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| POST | `/api/auth/signin` | Connexion utilisateur |
+| POST | `/api/auth/signup` | Inscription utilisateur |
+| GET | `/api/auth/signout` | Déconnexion utilisateur |
+| GET | `/api/auth/verify` | Vérification authentification |
+
+### Endpoints des quiz
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/quizzes` | Liste de tous les quiz |
+| POST | `/api/quizzes` | Créer un quiz |
+| GET | `/api/quizzes/{id}` | Détails d'un quiz |
+| PUT | `/api/quizzes/{id}` | Modifier un quiz |
+| DELETE | `/api/quizzes/{id}` | Supprimer un quiz |
+| POST | `/api/quizzes/{id}/submit` | Soumettre les réponses |
+| POST | `/api/quizzes/{id}/attempt` | Créer une tentative |
+
+### Endpoints d'abonnement Stripe
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/subscriptions/plans` | Liste des plans disponibles |
+| POST | `/api/subscription/checkout` | Créer session checkout Stripe |
+| POST | `/api/subscription/cancel` | Annuler l'abonnement actuel |
+| GET | `/api/subscription/current` | Abonnement actuel de l'utilisateur |
+| POST | `/api/webhook/stripe` | Webhook Stripe (non authentifié) |
+| POST | `/api/subscription/sync` | Synchronisation manuelle |
 | POST | `/api/quizzes/{quiz}/submit` | Submit a completed quiz |
 | POST | `/api/quizzes/{quiz}/attempt` | Create a quiz attempt |
 
 ### Question & Answer Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/questions` | List all questions |
-| POST | `/api/questions` | Create a question |
-| GET | `/api/questions/{id}` | Get question details |
-| PUT | `/api/questions/{id}` | Update a question |
-| DELETE | `/api/questions/{id}` | Delete a question |
-| GET | `/api/answers` | List all answers |
-| POST | `/api/answers` | Create an answer |
+### Endpoints des questions et réponses
 
-### User Endpoints
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/questions` | Liste de toutes les questions |
+| POST | `/api/questions` | Créer une question |
+| GET | `/api/questions/{id}` | Détails d'une question |
+| PUT | `/api/questions/{id}` | Modifier une question |
+| DELETE | `/api/questions/{id}` | Supprimer une question |
+| GET | `/api/answers` | Liste de toutes les réponses |
+| POST | `/api/answers` | Créer une réponse |
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/user` | Get current user info |
-| POST | `/api/users/{user}/assign-badges` | Assign badges to a user |
-| GET | `/api/leaderboard` | Get user rankings |
+### Endpoints utilisateur
 
-For a full list of endpoints, please check the Postman collection in the `/docs/postman` directory.
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/user` | Informations utilisateur actuel |
+| POST | `/api/users/{user}/assign-badges` | Assigner des badges |
+| GET | `/api/leaderboard` | Classement des utilisateurs |
 
-## 🏗️ Project Structure
+Pour la liste complète des endpoints, consultez la collection Postman dans `/docs/postman`.
+
+## Plans d'abonnement Stripe
+
+### Plan Gratuit (0€/mois)
+- 3 quiz maximum
+- 10 questions par quiz
+- 50 participants par quiz
+- Statistiques de base
+
+### Plan Premium (9.99€/mois)
+- Quiz illimités
+- 50 questions par quiz
+- 500 participants par quiz
+- Analytics avancées
+- Export complet
+
+### Plan Business (29.99€/mois)
+- Tout illimité
+- Gestion d'équipes
+- Support prioritaire
+- API personnalisée
+
+## Structure du projet
 
 ```
 quizify-api-rest/
-├── app/                             # Core application code
-│   ├── Http/                        # HTTP layer
-│   │   ├── Controllers/             # API Controllers
-│   │   ├── Middleware/              # Custom middleware
-│   │   └── Resources/               # API Resources/Transformers
-│   └── Models/                      # Eloquent models
-├── database/                        # Database related files
-│   ├── factories/                   # Model factories for testing
-│   ├── migrations/                  # Database migrations
-│   └── seeders/                     # Database seeders
-├── routes/                          # Route definitions
-│   ├── api.php                      # API routes
-│   └── web.php                      # Web routes
-└── tests/                           # Automated tests
-    ├── Unit/                        # Unit tests
-    └── Feature/                     # Feature tests
+├── app/                             # Code applicatif principal
+│   ├── Http/                        # Couche HTTP
+│   │   ├── Controllers/             # Contrôleurs API
+│   │   │   ├── SubscriptionController.php # Gestion Stripe
+│   │   │   └── ...
+│   │   ├── Middleware/              # Middlewares personnalisés
+│   │   └── Resources/               # Transformateurs API
+│   ├── Models/                      # Modèles Eloquent
+│   │   ├── SubscriptionPlan.php     # Plans d'abonnement
+│   │   └── ...
+│   └── Services/                    # Services métier
+│       ├── SubscriptionService.php  # Logique Stripe
+│       └── ...
+├── database/                        # Base de données
+│   ├── migrations/                  # Migrations avec Stripe
+│   └── seeders/                     # Seeders avec plans
+├── routes/                          # Définition des routes
+│   ├── api.php                      # Routes API avec Stripe
+│   └── ...
+└── tests/                           # Tests automatisés
+    ├── Unit/                        # Tests unitaires
+    └── Feature/                     # Tests d'intégration
 ```
 
-## 🧪 Testing
+## Tests
 
-Run the test suite with:
+Exécuter la suite de tests :
 
 ```bash
 php artisan test
 ```
 
-## 🛠️ Makefile Commands
+Tests avec coverage :
 
-This project includes a Makefile to simplify common development tasks:
+```bash
+php artisan test --coverage
+```
 
-| Command | Description |
-|---------|-------------|
-| `make build` | Build the Docker image quizify-api:v1 |
-| `make build-nc` | Build the Docker image without cache |
-| `make up` | Build, start containers and run migrations |
-| `make up-fresh` | Build, start containers with fresh migration and seed |
+## Développement et Debugging
+
+### Variables d'environnement importantes
+
+```bash
+# Application
+APP_NAME=Quizify
+APP_ENV=local
+APP_DEBUG=true
+
+# Base de données
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_DATABASE=quizify
+
+# Stripe
+STRIPE_KEY=pk_test_...
+STRIPE_SECRET=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Elasticsearch (optionnel)
+SCOUT_DRIVER=elasticsearch
+ELASTICSEARCH_HOST=localhost:9200
+```
+
+### Commandes utiles
+
+```bash
+# Nettoyage cache complet
+php artisan config:clear && php artisan cache:clear && php artisan route:clear
+
+# Migration fresh avec seeders
+php artisan migrate:fresh --seed
+
+# Création d'un contrôleur
+php artisan make:controller NomController --api
+
+# Création d'un modèle avec migration
+php artisan make:model NomModel -m
+
+# Tests spécifiques
+php artisan test tests/Unit/SubscriptionTest.php
+```
+
+### Debugging Stripe
+
+1. Vérifier les logs webhook :
+   ```bash
+   tail -f storage/logs/laravel.log | grep -i "webhook\|stripe"
+   ```
+
+2. Tester un webhook :
+   ```bash
+   stripe trigger checkout.session.completed
+   ```
+
+3. Voir les événements Stripe :
+   ```bash
+   stripe events list --limit 10
+   ```
+
+## Production et Déploiement
+
+### Variables de production
+
+```bash
+APP_ENV=production
+APP_DEBUG=false
+LOG_LEVEL=warning
+
+# Stripe Production
+STRIPE_KEY=pk_live_...
+STRIPE_SECRET=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Cache et sessions
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+```
+
+### Commandes de déploiement
+
+```bash
+# Optimisation production
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Migration en production
+php artisan migrate --force
+
+# Installation sans dev dependencies
+composer install --no-dev --optimize-autoloader
+```
+
+## Contribution
+
+1. Fork le projet
+2. Créer une branche feature (`git checkout -b feature/nouvelle-fonctionnalite`)
+3. Commit les changements (`git commit -am 'Ajout nouvelle fonctionnalité'`)
+4. Push la branche (`git push origin feature/nouvelle-fonctionnalite`)
+5. Créer une Pull Request
+
+## Licence
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+
+## Support
+
 | `make fresh-seed` | Run fresh migrations and seed the database |
 | `make adminer` | Start Adminer service on port 8080 |
 | `make adminer-down` | Stop Adminer service |
@@ -171,30 +400,24 @@ This project includes a Makefile to simplify common development tasks:
 | `make down-v` | Stop services and remove volumes |
 | `make clear-all` | Clear all Laravel caches |
 | `make help` | Display help information |
-
-Example usage:
+Exemple d'utilisation :
 
 ```bash
-# Start the application with a fresh database
+# Démarrer l'application avec une base de données fraîche
 make up-fresh
 
-# Access database management with Adminer
+# Accéder à la gestion de la base de données avec Adminer
 make adminer
 ```
 
-## 🔄 CI/CD
+## 🔄 Intégration et Déploiement Continus (CI/CD)
 
-This project uses GitHub Actions for continuous integration and deployment. The workflow runs tests, performs code quality checks, and ensures that all changes meet the required standards before being merged.
+Ce projet utilise GitHub Actions pour l'intégration et le déploiement continus. Le workflow exécute les tests, effectue des vérifications de qualité du code et s'assure que toutes les modifications respectent les standards requis avant d'être fusionnées.
 
-## 📄 License
+## 📄 Licence
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 📜
-
-## 🙏 Acknowledgements
-
-- [Laravel](https://laravel.com)
-- [Laravel Sanctum](https://laravel.com/docs/sanctum)
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails. 📜
 
 ---
 
-Created with ♥ by [@MehdiDiasGomes](https://github.com/MehdiDiasGomes)
+Créé avec ♥ par [@MehdiDiasGomes](https://github.com/MehdiDiasGomes)

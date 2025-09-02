@@ -1,4 +1,4 @@
-# 🧠 Quizify API REST - Documentation Complète pour LLM
+# Quizify API REST - Documentation Complète pour LLM
 
 ## Table des Matières
 1. [Vue d'ensemble](#vue-densemble)
@@ -16,7 +16,7 @@
 ## Vue d'ensemble
 
 ### Résumé du projet
-**Quizify** est une plateforme de quiz interactive complète développée avec Laravel 12. Elle permet aux utilisateurs de créer, partager et participer à des quiz avec un système de scoring avancé, un classement compétitif, un système de badges et une recherche Elasticsearch intégrée.
+**Quizify** est une plateforme de quiz interactive complète développée avec Laravel 12. Elle permet aux utilisateurs de créer, partager et participer à des quiz avec un système de scoring avancé, un classement compétitif, un système de badges, une recherche Elasticsearch intégrée et un module de paiement Stripe complet avec trois niveaux d'abonnement.
 
 ### Objectifs principaux
 - **Création collaborative** : Permettre aux utilisateurs de créer et partager des quiz
@@ -24,6 +24,7 @@
 - **Flexibilité organisationnelle** : Support des organisations et équipes
 - **Performance** : Recherche rapide via Elasticsearch
 - **Extensibilité** : Architecture modulaire avec repositories et services
+- **Monétisation** : Système d'abonnement Stripe avec limitations par plan
 
 ## Architecture technique
 
@@ -32,6 +33,8 @@
 - **Authentification** : Laravel Sanctum pour l'API
 - **Base de données** : MySQL/MariaDB avec migrations Laravel
 - **Recherche** : Elasticsearch via Laravel Scout
+- **Paiements** : Stripe avec Laravel Cashier
+- **Webhooks** : Stripe CLI pour développement local
 - **Stockage** : Support AWS S3 via Flysystem
 - **Conteneurisation** : Docker avec docker-compose
 - **Tests** : Pest (framework de test moderne)
@@ -43,24 +46,30 @@
   "laravel/framework": "^12.0",
   "laravel/sanctum": "^4.0",
   "laravel/scout": "^10.17",
+  "laravel/cashier": "^15.7",
   "laravel/tinker": "^2.10.1",
   "league/flysystem-aws-s3-v3": "^3.0",
-  "matchish/laravel-scout-elasticsearch": "^7.11"
+  "matchish/laravel-scout-elasticsearch": "^7.11",
+  "stripe/stripe-php": "^13.0"
 }
 ```
 
 ### Composants découverts
 - **Repository Pattern** : Abstraction des données avec `App\Components\Repository`
 - **Strategy Pattern** : Stratégies de règles pour questions, quiz et réponses
-- **Service Layer** : `ElasticsearchService`, `LeaderboardService`
+- **Service Layer** : `ElasticsearchService`, `LeaderboardService`, `SubscriptionService`
 - **Resource Layer** : Transformateurs API avec `QuizResource`, `QuestionResource`
 - **Exception Handling** : Exceptions personnalisées avec `ApiException`, `QuizException`
+- **Stripe Integration** : Module complet avec webhooks automatisés
+- **Subscription Management** : Plans d'abonnement avec limitations automatiques
 
 ### Flux de données
 1. **Authentification** : Sanctum → Middleware auth:sanctum → Controller
 2. **CRUD Operations** : Controller → Repository → Model → Database
 3. **Search** : Controller → Scout → Elasticsearch → Fallback MySQL
 4. **Quiz Submission** : Controller → Repository → Business Logic → Score Calculation
+5. **Stripe Payments** : Checkout → Webhook → Plan Update → User Sync
+6. **Subscription Limits** : Middleware → Plan Check → Access Control
 ## Structure du projet
 
 ### Arborescence principale
@@ -93,6 +102,7 @@ quizify-api-rest/
 │   │   │   ├── QuizController.php  # Gestion des quiz
 │   │   │   ├── QuestionController.php
 │   │   │   ├── AnswerController.php
+│   │   │   ├── SubscriptionController.php  # Gestion abonnements Stripe
 │   │   │   ├── UserController.php
 │   │   │   ├── LeaderboardController.php
 │   │   │   ├── BadgeController.php
@@ -124,6 +134,7 @@ quizify-api-rest/
 │   │   ├── Quiz.php               # Modèle quiz avec Elasticsearch
 │   │   ├── Question.php           # Questions de quiz
 │   │   ├── Answer.php             # Réponses aux questions
+│   │   ├── SubscriptionPlan.php   # Plans d'abonnement Stripe
 │   │   ├── QuestionType.php       # Types de questions
 │   │   ├── QuestionResponse.php   # Réponses utilisateurs
 │   │   ├── QuizAttempt.php        # Tentatives de quiz
@@ -149,7 +160,8 @@ quizify-api-rest/
 │   │       └── AnswerRepository.php
 │   └── Services/                  # Services métier
 │       ├── ElasticsearchService.php # Service Elasticsearch
-│       └── LeaderboardService.php   # Service classement
+│       ├── LeaderboardService.php   # Service classement
+│       └── SubscriptionService.php  # Service abonnements Stripe
 ├── config/                        # Configuration Laravel
 │   ├── app.php                    # Configuration application
 │   ├── auth.php                   # Configuration authentification
@@ -195,11 +207,19 @@ quizify-api-rest/
 
 ## Fonctionnalités principales
 
-### 🔐 Système d'authentification complet
+### Système d'authentification complet
 - **Registration/Login** : Via `AuthController` avec validation
 - **API Authentication** : Laravel Sanctum avec tokens
 - **Role-based Access** : Système de rôles avec middleware
 - **Password Security** : Hachage Bcrypt avec règles complexes
+
+### Module Stripe d'abonnement complet
+- **Plans d'abonnement** : Free (0€), Premium (9.99€), Business (29.99€)
+- **Paiements sécurisés** : Checkout Sessions Stripe avec webhooks
+- **Limitations automatiques** : Middleware de contrôle d'accès par plan
+- **Synchronisation automatique** : Webhooks pour mise à jour des plans
+- **Tests locaux** : Stripe CLI pour développement
+- **Gestion d'erreurs** : Exceptions spécialisées et logging complet
 
 ### 📝 Gestion avancée des quiz
 - **CRUD Quiz** : Création, lecture, mise à jour, suppression
@@ -258,11 +278,14 @@ SCOUT_DRIVER=elasticsearch
 ELASTICSEARCH_HOST=localhost:9200
 ELASTICSEARCH_INDEX=quizzes
 
-# AWS S3 (optionnel)
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=
+# Stripe (optionnel pour paiements)
+STRIPE_KEY=pk_test_...
+STRIPE_SECRET=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Stripe CLI pour développement local
+# Installer : https://stripe.com/docs/stripe-cli
+# Démarrer : stripe listen --forward-to localhost:8000/api/webhook/stripe
 
 # Admin par défaut
 ADMIN_USERNAME=
@@ -410,11 +433,12 @@ GET    /api/badges/{id}               # Détails badge
 PUT    /api/badges/{id}               # Modifier badge (auth)
 DELETE /api/badges/{id}               # Supprimer badge (auth)
 
-GET    /api/scores                    # Liste scores
-POST   /api/scores                    # Créer score (auth)
-GET    /api/scores/{id}               # Détails score
-PUT    /api/scores/{id}               # Modifier score (auth)
-DELETE /api/scores/{id}               # Supprimer score (auth)
+GET    /api/subscriptions/plans           # Plans d'abonnement disponibles
+POST   /api/subscription/checkout        # Créer session checkout Stripe (auth)
+POST   /api/subscription/cancel          # Annuler abonnement actuel (auth)
+GET    /api/subscription/current         # Abonnement actuel utilisateur (auth)
+POST   /api/webhook/stripe               # Webhook Stripe (non authentifié)
+POST   /api/subscription/sync            # Synchronisation manuelle (auth)
 ```
 
 ### 📂 Métadonnées
@@ -444,7 +468,8 @@ GET    /api/question-responses       # Liste réponses utilisateurs
 La base de données contient **23+ tables** avec relations complexes :
 
 #### Tables principales
-- **`users`** : Utilisateurs avec soft delete, ranking, relations org/team
+- **`users`** : Utilisateurs avec soft delete, ranking, relations org/team, subscription_plan_id
+- **`subscription_plans`** : Plans d'abonnement Stripe avec limitations et prix
 - **`quizzes`** : Quiz avec slug, statut, durée, score minimum
 - **`questions`** : Questions liées aux quiz et types
 - **`answers`** : Réponses avec flag `is_correct`
@@ -479,18 +504,25 @@ La base de données contient **23+ tables** avec relations complexes :
 
 ### Relations clés
 ```php
+### Relations clés
+```php
 // User relations
 User hasMany Quiz (created)
 User hasMany QuestionResponse
 User hasMany Score
 User belongsToMany Quiz (participants)
 User belongsToMany Badge
-User belongsTo Organization, Team, Role
+User belongsTo Organization, Team, Role, SubscriptionPlan
+
+// SubscriptionPlan relations
+SubscriptionPlan hasMany User
+SubscriptionPlan hasMany Subscription (via Stripe)
 
 // Quiz relations  
 Quiz hasMany Question
 Quiz belongsTo User (creator), Category, QuizLevel
 Quiz belongsToMany User (participants), Tag
+```
 
 // Question relations
 Question belongsTo Quiz, QuestionType
@@ -624,6 +656,11 @@ LOG_LEVEL=warning
 CACHE_DRIVER=redis
 SESSION_DRIVER=redis
 QUEUE_CONNECTION=redis
+
+# Stripe Production
+STRIPE_KEY=pk_live_...
+STRIPE_SECRET=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
 ## Points d'attention
@@ -708,7 +745,7 @@ Log::info('Quiz submission', [
 ]);
 ```
 
-#### 5. **Tests API complets**
+#### 4. **Tests API complets**
 ```php
 // Ajouter tests Feature pour tous les endpoints
 test('quiz submission calculates correct score')
@@ -716,9 +753,25 @@ test('quiz submission calculates correct score')
     ->postJson("/api/quizzes/{$quiz->id}/submit", $responses)
     ->assertSuccessful()
     ->assertJsonStructure(['score', 'correct_answers', 'total_questions']);
+
+test('stripe checkout creates subscription')
+    ->actingAs($user)
+    ->postJson('/api/subscription/checkout', ['plan_id' => 2])
+    ->assertSuccessful()
+    ->assertJsonStructure(['checkout_url', 'session_id']);
 ```
 
-### 🎯 Points forts du projet
+#### 5. **Monitoring Stripe**
+```php
+// Logs spécialisés pour Stripe
+Log::info('Stripe webhook received', [
+    'type' => $event->type,
+    'customer_id' => $event->data->object->customer,
+    'subscription_id' => $event->data->object->subscription
+]);
+```
+
+### Points forts du projet
 
 1. **Architecture modulaire** : Repository pattern, Services, Strategy pattern
 2. **Recherche hybride** : Elasticsearch avec fallback MySQL
@@ -730,14 +783,17 @@ test('quiz submission calculates correct score')
 8. **API RESTful** : Endpoints cohérents et standards
 9. **Authentification sécurisée** : Sanctum avec tokens
 10. **Documentation complète** : README détaillé + Postman
+11. **Module Stripe complet** : Paiements avec webhooks automatisés
+12. **Gestion d'abonnements** : Plans avec limitations automatiques
 
-### 📈 Métriques projet
-- **23+ migrations** : Base de données complète
-- **15+ modèles** : Entités métier bien définies
-- **14+ contrôleurs** : API complète
+### Métriques projet
+- **25+ migrations** : Base de données complète avec Stripe
+- **16+ modèles** : Entités métier avec abonnements
+- **15+ contrôleurs** : API complète avec Stripe
 - **7+ tests unitaires** : Couverture modèles
 - **Docker ready** : Déploiement facilité
 - **Elasticsearch** : Recherche performante
+- **Stripe intégré** : Paiements et webhooks
 - **Makefile** : Développement simplifié
 
 #### Quiz
