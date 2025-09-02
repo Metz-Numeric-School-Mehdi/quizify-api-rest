@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\SubscriptionPlan;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Exceptions\IncompletePayment;
 use Stripe\Exception\ApiErrorException;
+use Stripe\Exception\SignatureVerificationException;
+use Stripe\Webhook;
 
 class SubscriptionController extends Controller
 {
@@ -429,13 +432,13 @@ class SubscriptionController extends Controller
 
         try {
             if ($endpointSecret && $sigHeader) {
-                $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
+                $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
                 Log::info('Webhook vérifié avec signature');
             } else {
                 $event = json_decode($payload, true);
                 Log::info('Webhook traité sans vérification de signature (développement)');
             }
-        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+        } catch (SignatureVerificationException $e) {
             Log::error('Signature webhook invalide', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Signature invalide'], 400);
         } catch (\UnexpectedValueException $e) {
@@ -499,7 +502,7 @@ class SubscriptionController extends Controller
             return;
         }
 
-        $user = \App\Models\User::where('stripe_id', $stripeCustomerId)->first();
+        $user = User::where('stripe_id', $stripeCustomerId)->first();
 
         if (!$user) {
             Log::warning('Utilisateur non trouvé pour le customer Stripe', [
@@ -572,7 +575,7 @@ class SubscriptionController extends Controller
         Log::info('Abonnement mis à jour', ['subscription_id' => $subscription['id']]);
 
         $stripeCustomerId = $subscription['customer'];
-        $user = \App\Models\User::where('stripe_id', $stripeCustomerId)->first();
+        $user = User::where('stripe_id', $stripeCustomerId)->first();
 
         if (!$user) {
             return;
@@ -603,7 +606,7 @@ class SubscriptionController extends Controller
         Log::info('Abonnement supprimé', ['subscription_id' => $subscription['id']]);
 
         $stripeCustomerId = $subscription['customer'];
-        $user = \App\Models\User::where('stripe_id', $stripeCustomerId)->first();
+        $user = User::where('stripe_id', $stripeCustomerId)->first();
 
         if ($user) {
             $freePlan = SubscriptionPlan::where('slug', 'free')->first();
