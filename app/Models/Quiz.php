@@ -34,42 +34,13 @@ class Quiz extends Model
 
     /**
      * Determines if the model should be searchable.
-     * This method checks if Elasticsearch is available before allowing indexing.
      *
      * @return bool
      */
     public function shouldBeSearchable(): bool
     {
-        try {
-            if (config('scout.driver') !== 'elasticsearch') {
-                return false;
-            }
-
-            $elasticsearchHost = env('ELASTICSEARCH_HOST', 'localhost:9200');
-
-            $contextOptions = [
-                'http' => [
-                    'method' => 'HEAD',
-                    'timeout' => 1,
-                    'ignore_errors' => true
-                ]
-            ];
-
-            $url = 'http://' . $elasticsearchHost;
-            $context = stream_context_create($contextOptions);
-
-            $result = @file_get_contents($url, false, $context);
-
-            if ($result !== false) {
-                return true;
-            }
-
-            Log::warning("ElasticSearch unavailable during indexing attempt: {$elasticsearchHost}");
-            return false;
-        } catch (\Exception $e) {
-            Log::error("Error checking ElasticSearch availability: " . $e->getMessage());
-            return false;
-        }
+        return config('scout.driver') === 'elasticsearch' &&
+               config('app.env') !== 'testing';
     }
 
     public function level(): BelongsTo

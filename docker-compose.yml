@@ -97,6 +97,11 @@ services:
             ADMIN_EMAIL: ${ADMIN_EMAIL} # Email de l'administrateur
             ADMIN_PASSWORD: ${ADMIN_PASSWORD} # Mot de passe de l'administrateur
             ADMIN_PROFILE_PHOTO: ${ADMIN_PROFILE_PHOTO} # Photo de profil admin
+
+            SCOUT_DRIVER: ${SCOUT_DRIVER} # Driver Scout pour la recherche
+            ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST} # Hôte Elasticsearch
+            ELASTICSEARCH_INDEX: ${ELASTICSEARCH_INDEX} # Index Elasticsearch
+
             NODE_ENV: production # Définit l'environnement Node.js en production
         depends_on:
             - mysql # Démarre après le service MySQL

@@ -28,6 +28,12 @@ fresh-seed:
 	@docker compose exec quizify-api php artisan migrate:fresh --seed --force
 	@echo "\033[1;32m[SUCCESS]\033[0m Migration FRESH et seed terminés !"
 
+fresh-seed-search:
+	@echo "\033[1;34m[INFO]\033[0m Migration FRESH, seed et réindexation Elasticsearch..."
+	@docker compose exec quizify-api php artisan migrate:fresh --seed --force
+	@docker compose exec quizify-api php artisan search:reindex
+	@echo "\033[1;32m[SUCCESS]\033[0m Migration FRESH, seed et réindexation terminés !"
+
 adminer:
 	@echo "\033[1;34m[INFO]\033[0m Démarrage du service Adminer avec le profil admin..."
 	@docker compose --profile admin up -d adminer
@@ -61,14 +67,15 @@ test:
 help:
 	@echo ""
 	@echo "\033[1;33mCommandes disponibles :\033[0m"
-	@echo "  build         : Build de l'image Docker quizify-api:v1"
-	@echo "  up            : Build, démarre les conteneurs et effectue migrate:fresh --seed"
-	@echo "  fresh-seed    : Migration FRESH et seed de la base de données dans le conteneur quizify-api"
-	@echo "  adminer       : Démarre le service Adminer avec le profil admin (port 8080)"
-	@echo "  adminer-down  : Arrête le service Adminer"
-	@echo "  down          : Arrête les services Docker Compose"
-	@echo "  down-v        : Arrête les services Docker Compose et supprime les volumes"
-	@echo "  clear-all     : Nettoie tous les caches Laravel (cache, config, route, view)"
-	@echo "  test          : Exécute les tests PHPUnit"
-	@echo "  help          : Affiche cette aide"
+	@echo "  build             : Build de l'image Docker quizify-api:v1"
+	@echo "  up                : Build, démarre les conteneurs et effectue migrate:fresh --seed"
+	@echo "  fresh-seed        : Migration FRESH et seed de la base de données"
+	@echo "  fresh-seed-search : Migration FRESH, seed et réindexation Elasticsearch"
+	@echo "  adminer           : Démarre le service Adminer (port 8080)"
+	@echo "  adminer-down      : Arrête le service Adminer"
+	@echo "  down              : Arrête les services Docker Compose"
+	@echo "  down-v            : Arrête les services et supprime les volumes"
+	@echo "  clear-all         : Nettoie tous les caches Laravel"
+	@echo "  test              : Exécute les tests PHPUnit"
+	@echo "  help              : Affiche cette aide"
 	@echo ""
