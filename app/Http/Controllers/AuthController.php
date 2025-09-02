@@ -129,4 +129,25 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    public function verify(Request $request)
+    {
+        try {
+            $user = User::with('subscriptionPlan')->find($request->user()->id);
+            if (!$user) {
+                return response()->json([
+                    "message" => "Utilisateur non authentifié."
+                ], 401);
+            }
+
+            return response()->json([
+                'user' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Erreur lors de la vérification.",
+                "error" => $e->getMessage()
+            ], 500);
+        }
+    }
 }
