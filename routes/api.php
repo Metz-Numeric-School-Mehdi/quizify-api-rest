@@ -25,13 +25,11 @@ Route::get("/user", function (Request $request) {
 
 Route::post("/users/{user}/assign-badges", [UserController::class, "assignBadges"])->middleware("auth:sanctum");
 
-// Leaderboard routes
 Route::get("/leaderboard", [LeaderboardController::class, "index"]);
 Route::get("/leaderboard/category/{categoryId}", [LeaderboardController::class, "byCategory"]);
 Route::get("/leaderboard/organization/{organizationId}", [LeaderboardController::class, "byOrganization"]);
 Route::post("/leaderboard/update-rankings", [LeaderboardController::class, "updateRankings"])->middleware("auth:sanctum");
 
-// Points routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/points/user', [App\Http\Controllers\PointsController::class, 'getUserPoints']);
     Route::get('/points/user/category/{categoryId}', [App\Http\Controllers\PointsController::class, 'getUserCategoryPoints']);
@@ -84,10 +82,11 @@ Route::delete('/question-responses/{id}', [App\Http\Controllers\QuestionResponse
 Route::get('/quiz-levels', [App\Http\Controllers\QuizLevelController::class, 'index']);
 Route::get('/categories', [App\Http\Controllers\CategoryController::class, 'index']);
 
-// Subscription routes
 Route::get('/subscription/plans', [App\Http\Controllers\SubscriptionController::class, 'plans']);
 
-// Checkout endpoint - Redirect to Stripe checkout with query parameter
+Route::get('/subscription/success', [App\Http\Controllers\SubscriptionController::class, 'success']);
+Route::get('/subscription/cancel', [App\Http\Controllers\SubscriptionController::class, 'cancelled']);
+
 Route::get('/checkout', [App\Http\Controllers\SubscriptionController::class, 'checkout'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -98,10 +97,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscription/swap', [App\Http\Controllers\SubscriptionController::class, 'swapSubscription']);
     Route::post('/subscription/sync', [App\Http\Controllers\SubscriptionController::class, 'syncSubscription']);
     Route::get('/subscription/billing-portal', [App\Http\Controllers\SubscriptionController::class, 'billingPortal']);
-
-    // Debug route (temporary)
-    Route::get('/debug/session/{session_id}', [App\Http\Controllers\SubscriptionController::class, 'debugSession']);
 });
 
-// Stripe webhook (ne nécessite pas d'authentification)
 Route::post('/webhook/stripe', [App\Http\Controllers\SubscriptionController::class, 'handleWebhook']);
