@@ -100,10 +100,12 @@ class SubscriptionController extends Controller
         }
 
         try {
+            $frontendUrl = config(env("APP_FRONTEND_URL"), 'http://localhost:3000');
+
             $checkoutSession = $user->newSubscription('default', $subscriptionPlan->stripe_price_id)
                 ->checkout([
-                    'success_url' => config('app.url') . '/subscription/success?session_id={CHECKOUT_SESSION_ID}',
-                    'cancel_url' => config('app.url') . '/subscription/cancel',
+                    'success_url' => $frontendUrl . '/subscription/success?session_id={CHECKOUT_SESSION_ID}',
+                    'cancel_url' => $frontendUrl . '/subscription/cancel',
                 ], [
                     'metadata' => [
                         'user_id' => $user->id,
@@ -296,6 +298,70 @@ class SubscriptionController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Handle successful subscription payment
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function success(Request $request): JsonResponse
+    {
+        $sessionId = $request->query('session_id');
+
+        if (!$sessionId) {
+            return response()->json([
+                'message' => 'Session ID manquant',
+                'error' => 'Aucun session_id fourni'
+            ], 400);
+        }
+
+        try {
+            $session = \Stripe\Checkout\Session::retrieve($sessionId);
+
+            if ($session->payment_status === 'paid') {
+                return response()->json([
+                    'message' => 'Paiement réussi !',
+                    'status' => 'success',
+                    'session_id' => $sessionId,
+                    'payment_status' => $session->payment_status,
+                    'subscription_id' => $session->subscription ?? null
+                ]);
+            } else {
+                return response()->json([
+                    'message' => 'Paiement en cours ou échoué',
+                    'status' => 'pending',
+                    'session_id' => $sessionId,
+                    'payment_status' => $session->payment_status
+                ], 402);
+            }
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la vérification de session Stripe', [
+                'session_id' => $sessionId,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'message' => 'Erreur lors de la vérification du paiement',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Handle cancelled subscription payment
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function cancelled(Request $request): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Paiement annulé',
+            'status' => 'cancelled',
+            'description' => 'Vous avez annulé le processus de paiement. Vous pouvez réessayer à tout moment.'
+        ]);
     }
 
     /**
