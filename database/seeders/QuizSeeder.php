@@ -15,7 +15,7 @@ class QuizSeeder extends Seeder
         Quiz::withoutSyncingToSearch(function () {
             Quiz::create([
                 "title" => "Quiz Laravel",
-                "slug" => "quiz-laravel", 
+                "slug" => "quiz-laravel",
                 "description" => "Testez vos connaissances sur Laravel.",
                 "is_public" => true,
                 "level_id" => 1,
@@ -33,7 +33,7 @@ class QuizSeeder extends Seeder
                 "description" => "Questions avancées sur PHP et la programmation orientée objet.",
                 "is_public" => true,
                 "level_id" => 2,
-                "status" => "published", 
+                "status" => "published",
                 "user_id" => 1,
                 "duration" => 45,
                 "pass_score" => 75,
