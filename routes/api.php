@@ -3,6 +3,7 @@
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\OrderingQuestionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -12,10 +13,10 @@ include base_path("routes/auth.php");
 Route::get('/quizzes/search', [QuizController::class, 'search']);
 Route::get('/quizzes/{quizId}', [QuizController::class, 'show']);
 
-Route::apiResource('quizzes', QuizController::class)->middleware(['auth:sanctum', 'subscription.limits:quiz_creation']);
-Route::apiResource('questions', QuestionController::class)->middleware(['auth:sanctum', 'subscription.limits:question_creation']);
+Route::apiResource('quizzes', QuizController::class)->middleware(['auth:sanctum']);
+Route::apiResource('questions', QuestionController::class)->middleware(['auth:sanctum']);
 
-Route::post("quizzes/{quizId}/submit", [QuizController::class, 'submit'])->middleware(['auth:sanctum', 'subscription.limits:quiz_participation']);
+Route::post("quizzes/{quizId}/submit", [QuizController::class, 'submit'])->middleware(['auth:sanctum']);
 
 Route::get("/quizzes/{quizId}/questions", [QuestionController::class, "getByQuiz"]);
 
@@ -24,6 +25,12 @@ Route::get("/user", function (Request $request) {
 })->middleware("auth:sanctum");
 
 Route::post("/users/{user}/assign-badges", [UserController::class, "assignBadges"])->middleware("auth:sanctum");
+
+Route::post('/ordering-questions', [OrderingQuestionController::class, 'createOrderingQuestion'])->middleware('auth:sanctum');
+Route::get('/ordering-questions/{questionId}', [OrderingQuestionController::class, 'getOrderingQuestion']);
+Route::post('/ordering-questions/{questionId}/submit', [OrderingQuestionController::class, 'submitOrderingResponse'])->middleware('auth:sanctum');
+Route::get('/quizzes/{quizId}/ordering-questions', [OrderingQuestionController::class, 'getOrderingQuestionsByQuiz']);
+Route::put('/ordering-questions/{questionId}', [OrderingQuestionController::class, 'updateOrderingQuestion'])->middleware('auth:sanctum');
 
 Route::get("/leaderboard", [LeaderboardController::class, "index"]);
 Route::get("/leaderboard/category/{categoryId}", [LeaderboardController::class, "byCategory"]);

@@ -16,7 +16,9 @@
     { "key": "stripe_payment_method", "value": "pm_card_visa" },
     { "key": "stripe_price_id", "value": "price_test_premium" },
     { "key": "session_id", "value": "" },
-    { "key": "stripe_session_id", "value": "" }
+    { "key": "stripe_session_id", "value": "" },
+    { "key": "ordering_question_id", "value": "" },
+    { "key": "osi_question_id", "value": "" }
   ],
   "item": [
     {
@@ -1284,6 +1286,317 @@
         { "name": "Create Question", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"quiz_id\": 1,\n  \"content\": \"Question test ?\",\n  \"question_type_id\": 1\n}" }, "url": { "raw": "{{base_url}}/api/questions", "host": ["{{base_url}}"], "path": ["api", "questions"] } } },
         { "name": "Update Question", "request": { "method": "PUT", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"quiz_id\": 1,\n  \"content\": \"Question test updated ?\",\n  \"question_type_id\": 1\n}" }, "url": { "raw": "{{base_url}}/api/questions/:id", "host": ["{{base_url}}"], "path": ["api", "questions", ":id"] } } },
         { "name": "Delete Question", "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/questions/:id", "host": ["{{base_url}}"], "path": ["api", "questions", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Questions de Remise dans l'Ordre",
+      "item": [
+        {
+          "name": "Créer une Question de Remise dans l'Ordre",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quiz_id\": 1,\n  \"content\": \"Remettez dans l'ordre chronologique les étapes de développement\",\n  \"answers\": [\n    {\n      \"content\": \"Analyse des besoins\",\n      \"order_position\": 1\n    },\n    {\n      \"content\": \"Conception et design\",\n      \"order_position\": 2\n    },\n    {\n      \"content\": \"Développement\",\n      \"order_position\": 3\n    },\n    {\n      \"content\": \"Tests\",\n      \"order_position\": 4\n    },\n    {\n      \"content\": \"Déploiement\",\n      \"order_position\": 5\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Question de remise dans l\\'ordre créée avec succès', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json.data).to.have.property('answers');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Récupérer une Question de Remise dans l'Ordre",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions/:questionId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions", ":questionId"],
+              "variable": [
+                {
+                  "key": "questionId",
+                  "value": "1",
+                  "description": "ID de la question de remise dans l'ordre"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Question récupérée avec réponses mélangées', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('question');",
+                  "    pm.expect(json.question).to.have.property('answers');",
+                  "    pm.expect(json.question.answers).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Soumettre Réponse - Ordre Correct",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_order\": [1, 2, 3, 4, 5]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions/:questionId/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions", ":questionId", "submit"],
+              "variable": [
+                {
+                  "key": "questionId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Réponse correcte validée', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('result');",
+                  "    pm.expect(json.result.is_correct).to.be.true;",
+                  "    pm.expect(json.result.percentage).to.equal(100);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Soumettre Réponse - Ordre Incorrect",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_order\": [3, 1, 2, 5, 4]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions/:questionId/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions", ":questionId", "submit"],
+              "variable": [
+                {
+                  "key": "questionId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Réponse incorrecte avec feedback détaillé', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('result');",
+                  "    pm.expect(json.result.is_correct).to.be.false;",
+                  "    pm.expect(json.result).to.have.property('feedback');",
+                  "    pm.expect(json.result.feedback).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Récupérer Questions d'Ordre par Quiz",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/quizzes/:quizId/ordering-questions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "quizzes", ":quizId", "ordering-questions"],
+              "variable": [
+                {
+                  "key": "quizId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Questions de remise dans l\\'ordre du quiz récupérées', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier une Question de Remise dans l'Ordre",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Remettez dans l'ordre les phases du cycle de vie logiciel\",\n  \"answers\": [\n    {\n      \"content\": \"Planification\",\n      \"order_position\": 1\n    },\n    {\n      \"content\": \"Analyse\",\n      \"order_position\": 2\n    },\n    {\n      \"content\": \"Conception\",\n      \"order_position\": 3\n    },\n    {\n      \"content\": \"Implémentation\",\n      \"order_position\": 4\n    },\n    {\n      \"content\": \"Test\",\n      \"order_position\": 5\n    },\n    {\n      \"content\": \"Maintenance\",\n      \"order_position\": 6\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions/:questionId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions", ":questionId"],
+              "variable": [
+                {
+                  "key": "questionId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Question de remise dans l\\'ordre modifiée avec succès', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('data');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Complet - Couches OSI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quiz_id\": 1,\n  \"content\": \"Ordonnez les couches du modèle OSI du niveau le plus bas au plus haut\",\n  \"answers\": [\n    {\n      \"content\": \"Couche physique\",\n      \"order_position\": 1\n    },\n    {\n      \"content\": \"Couche liaison de données\",\n      \"order_position\": 2\n    },\n    {\n      \"content\": \"Couche réseau\",\n      \"order_position\": 3\n    },\n    {\n      \"content\": \"Couche transport\",\n      \"order_position\": 4\n    },\n    {\n      \"content\": \"Couche session\",\n      \"order_position\": 5\n    },\n    {\n      \"content\": \"Couche présentation\",\n      \"order_position\": 6\n    },\n    {\n      \"content\": \"Couche application\",\n      \"order_position\": 7\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Question OSI créée avec succès', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.answers).to.have.lengthOf(7);",
+                  "});",
+                  "",
+                  "pm.test('Stockage de l\\'ID pour tests suivants', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('osi_question_id', json.data.id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
       ]
     },
     {

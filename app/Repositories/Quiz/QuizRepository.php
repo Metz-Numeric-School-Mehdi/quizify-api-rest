@@ -217,6 +217,11 @@ class QuizRepository extends Repository
             $data['slug'] = Str::slug($data['title']);
         }
 
+        // Gérer la duration : si 0 ou non définie, mettre null pour temps infini
+        if (!isset($data['duration']) || $data['duration'] === 0 || $data['duration'] === '0') {
+            $data['duration'] = null;
+        }
+
         $quiz = Quiz::withoutSyncingToSearch(function () use ($data) {
             return parent::store($data);
         });
@@ -226,6 +231,9 @@ class QuizRepository extends Repository
         } catch (\Exception $e) {
             Log::warning("Quiz created successfully but Elasticsearch indexing failed: " . $e->getMessage());
         }
+
+        // Charger les relations level, category et tags pour la réponse
+        $quiz->load('level', 'category', 'tags');
 
         return $quiz;
     }
@@ -241,6 +249,11 @@ class QuizRepository extends Repository
     {
         if (!isset($data['slug']) && isset($data['title'])) {
             $data['slug'] = Str::slug($data['title']);
+        }
+
+        // Gérer la duration : si 0 ou non définie, mettre null pour temps infini
+        if (isset($data['duration']) && ($data['duration'] === 0 || $data['duration'] === '0')) {
+            $data['duration'] = null;
         }
 
         $quiz = Quiz::withoutSyncingToSearch(function () use ($data, $id) {

@@ -23,4 +23,26 @@ class AnswerFactory extends Factory
             "is_correct" => $this->faker->boolean,
         ];
     }
+
+    /**
+     * Create an ordered answer state.
+     *
+     * @param int $position
+     * @return static
+     */
+    public function ordered(int $position): static
+    {
+        return $this->state(function (array $attributes) use ($position) {
+            return [
+                'is_correct' => true,
+                'order_position' => $position,
+                'content' => $this->faker->randomElement([
+                    'Étape ' . $position,
+                    'Phase ' . $position,
+                    'Niveau ' . $position,
+                    'Processus ' . $position
+                ])
+            ];
+        });
+    }
 }

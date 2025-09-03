@@ -11,7 +11,7 @@ class Answer extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ["question_id", "content", "is_correct"];
+    protected $fillable = ["question_id", "content", "is_correct", "order_position"];
 
     public function question(): BelongsTo
     {

@@ -82,7 +82,7 @@ class Quiz extends Model
     {
         return [
             'id' => $this->id,
-            'title' => $this->title,
+                        'title' => $this->title,
             'description' => $this->description,
             'level_id' => $this->level_id,
             'category_id' => $this->category_id,
@@ -90,5 +90,25 @@ class Quiz extends Model
             'is_public' => $this->is_public,
             'tags' => $this->tags->pluck('name')->toArray(),
         ];
+    }
+
+    /**
+     * Accessor pour savoir si le quiz a un temps limité
+     */
+    public function getIsTimedAttribute(): bool
+    {
+        return $this->duration !== null;
+    }
+
+    /**
+     * Accessor pour obtenir la durée formatée
+     */
+    public function getFormattedDurationAttribute(): string
+    {
+        if ($this->duration === null) {
+            return 'Temps illimité';
+        }
+
+        return $this->duration . ' minute' . ($this->duration > 1 ? 's' : '');
     }
 }
