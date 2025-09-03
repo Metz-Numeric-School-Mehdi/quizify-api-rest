@@ -1247,7 +1247,186 @@
             }
           ]
         },
-
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"new_username\",\n  \"firstname\": \"John\",\n  \"lastname\": \"Doe\",\n  \"email\": \"john.doe@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Profile updated successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('user');",
+                  "    pm.expect(json.message).to.include('succès');",
+                  "});",
+                  "",
+                  "pm.test('Updated user data is returned', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.user) {",
+                  "        pm.expect(json.user).to.have.property('id');",
+                  "        pm.expect(json.user).to.have.property('username');",
+                  "        pm.expect(json.user).to.have.property('email');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile with Photo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "username", "value": "updated_username", "type": "text" },
+                { "key": "firstname", "value": "Jean", "type": "text" },
+                { "key": "lastname", "value": "Dupont", "type": "text" },
+                { "key": "profile_photo", "type": "file", "src": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Profile with photo updated successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('user');",
+                  "    pm.expect(json.message).to.include('succès');",
+                  "});",
+                  "",
+                  "pm.test('Profile photo URL is provided', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.user && json.user.profile_photo) {",
+                  "        pm.expect(json).to.have.property('profile_photo_url');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"NewPassword123!\",\n  \"password_confirmation\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Password updated successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json.message).to.include('succès');",
+                  "});",
+                  "",
+                  "pm.test('Password is not returned in response', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.user) {",
+                  "        pm.expect(json.user).to.not.have.property('password');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile - Validation Error",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid-email\",\n  \"password\": \"weak\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Validation errors are returned', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('errors');",
+                  "    pm.expect(json.message).to.include('validation');",
+                  "});",
+                  "",
+                  "pm.test('Error messages are in French', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.errors) {",
+                  "        var errorMessages = JSON.stringify(json.errors);",
+                  "        pm.expect(errorMessages).to.satisfy(function(msg) {",
+                  "            return msg.includes('email') || msg.includes('mot de passe');",
+                  "        });",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
         {
           "name": "Assign Badges",
           "request": {
