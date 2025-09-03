@@ -26,6 +26,7 @@ class User extends Authenticatable
         "password",
         "role_id",
         "profile_photo",
+        "avatar",
         "team_id",
         "organization_id",
         "subscription_plan_id",

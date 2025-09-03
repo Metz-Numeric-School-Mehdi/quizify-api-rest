@@ -44,6 +44,7 @@ class AuthController extends Controller
                     "email" => "required|email|unique:users",
                     "password" => "required",
                     "photo" => "nullable|image|max:2048",
+                    "avatar" => "nullable|string|url",
                     Password::min(8)->letters()->numbers()->symbols(),
                 ],
                 [
