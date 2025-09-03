@@ -48,9 +48,9 @@ class QuizController extends CRUDController
             $validated = $request->validate([
                 'responses' => 'required|array|min:1',
                 'responses.*.question_id' => 'required|integer|exists:questions,id',
-                'responses.*.answer_id' => 'required_without:responses.*.user_answer|integer|exists:answers,id',
-                'responses.*.user_answer' => 'required_without:responses.*.answer_id|string|max:1000',
-                'time_spent' => 'nullable|integer|min:1', // Temps passé en secondes
+                'responses.*.answer_id' => 'required_without:responses.*.user_answer|nullable|integer|exists:answers,id',
+                'responses.*.user_answer' => 'required_without:responses.*.answer_id|nullable|string|max:1000',
+                'time_spent' => 'nullable|integer|min:0', // Temps passé en secondes (0 accepté pour quiz sans limite)
             ]);
 
             $user = $request->user();
