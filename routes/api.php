@@ -24,6 +24,8 @@ Route::get("/user", function (Request $request) {
     return $request->user()->load('subscriptionPlan');
 })->middleware("auth:sanctum");
 
+Route::put("/user/profile", [UserController::class, "updateProfile"])->middleware("auth:sanctum");
+
 Route::post("/users/{user}/assign-badges", [UserController::class, "assignBadges"])->middleware("auth:sanctum");
 
 Route::post('/ordering-questions', [OrderingQuestionController::class, 'createOrderingQuestion'])->middleware('auth:sanctum');

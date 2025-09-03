@@ -87,7 +87,7 @@ class LeaderboardService
             "users.username",
             "users.firstname",
             "users.lastname",
-            "users.profile_photo",
+            "users.avatar",
             "users.ranking",
             DB::raw("COALESCE(SUM(scores.score), 0) as total_score"),
             DB::raw("COUNT(DISTINCT scores.quiz_id) as quizzes_completed"),
@@ -98,7 +98,7 @@ class LeaderboardService
                 "users.username",
                 "users.firstname",
                 "users.lastname",
-                "users.profile_photo",
+                "users.avatar",
                 "users.ranking",
             )
             ->orderBy("total_score", $order)
@@ -127,7 +127,7 @@ class LeaderboardService
             "users.username",
             "users.firstname",
             "users.lastname",
-            "users.profile_photo",
+            "users.avatar",
             "users.ranking",
             DB::raw("COALESCE(SUM(scores.score), 0) as total_score"),
             DB::raw("COUNT(DISTINCT scores.quiz_id) as quizzes_completed"),
@@ -140,7 +140,7 @@ class LeaderboardService
                 "users.username",
                 "users.firstname",
                 "users.lastname",
-                "users.profile_photo",
+                "users.avatar",
                 "users.ranking",
             )
             ->orderBy("total_score", $order)
@@ -169,7 +169,7 @@ class LeaderboardService
             "users.username",
             "users.firstname",
             "users.lastname",
-            "users.profile_photo",
+            "users.avatar",
             "users.ranking",
             "teams.name as team_name",
             DB::raw("COALESCE(SUM(scores.score), 0) as total_score"),
@@ -183,7 +183,7 @@ class LeaderboardService
                 "users.username",
                 "users.firstname",
                 "users.lastname",
-                "users.profile_photo",
+                "users.avatar",
                 "users.ranking",
                 "teams.name",
             )
