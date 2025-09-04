@@ -217,7 +217,6 @@ class QuizRepository extends Repository
             $data['slug'] = Str::slug($data['title']);
         }
 
-        // Gérer la duration : si 0 ou non définie, mettre null pour temps infini
         if (!isset($data['duration']) || $data['duration'] === 0 || $data['duration'] === '0') {
             $data['duration'] = null;
         }
@@ -232,7 +231,6 @@ class QuizRepository extends Repository
             Log::warning("Quiz created successfully but Elasticsearch indexing failed: " . $e->getMessage());
         }
 
-        // Charger les relations level, category et tags pour la réponse
         $quiz->load('level', 'category', 'tags');
 
         return $quiz;
