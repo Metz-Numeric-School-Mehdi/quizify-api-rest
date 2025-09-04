@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Badge;
+use App\Http\Resources\UserResource;
 use App\Repositories\User\UserRepository;
 use App\Http\Modules\Users\Strategies\UserRuleStrategy;
 use Illuminate\Http\Request;
@@ -13,6 +14,36 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
+    /**
+     * Get the authenticated user's profile with statistics.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function profile(Request $request)
+    {
+        try {
+            $user = User::with('subscriptionPlan')
+                ->find($request->user()->id);
+
+            if (!$user) {
+                return response()->json([
+                    "message" => "Utilisateur non trouvé."
+                ], 404);
+            }
+
+            return response()->json([
+                'user' => new UserResource($user)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Erreur lors de la récupération du profil.",
+                "error" => $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Classement des utilisateurs par ranking croissant (leaderboard).
      */

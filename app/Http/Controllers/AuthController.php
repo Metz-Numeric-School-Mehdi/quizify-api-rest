@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -30,7 +32,7 @@ class AuthController extends Controller
         $token = $user->createToken("auth_token")->plainTextToken;
 
         return response()->json([
-            "user" => $user,
+            'user' => new UserResource($user),
             "token" => $token,
         ]);
     }
@@ -64,25 +66,16 @@ class AuthController extends Controller
             if ($request->hasFile("photo")) {
                 $file = $request->file("photo");
                 $filename = "profile_" . uniqid() . "." . $file->getClientOriginalExtension();
-                $path = \Storage::disk("minio")->putFileAs("", $file, $filename);
+                $path = Storage::disk("minio")->putFileAs("", $file, $filename);
                 $data["profile_photo"] = $path;
             }
 
-            $profile_photo_url = null;
             $user = User::create($data);
             $token = $user->createToken("auth_token")->plainTextToken;
-
-            if (!empty($user->profile_photo)) {
-                $profile_photo_url = \Storage::disk("minio")->temporaryUrl(
-                    $user->profile_photo,
-                    now()->addMinutes(60)
-                );
-            }
 
             return response()->json([
                 "user" => $user,
                 "token" => $token,
-                "profile_photo_url" => $profile_photo_url,
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(
@@ -142,7 +135,7 @@ class AuthController extends Controller
             }
 
             return response()->json([
-                'user' => $user
+                'user' => new UserResource($user)
             ]);
         } catch (\Exception $e) {
             return response()->json([

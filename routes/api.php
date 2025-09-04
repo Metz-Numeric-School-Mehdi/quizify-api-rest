@@ -20,8 +20,17 @@ Route::post("quizzes/{quizId}/submit", [QuizController::class, 'submit'])->middl
 
 Route::get("/quizzes/{quizId}/questions", [QuestionController::class, "getByQuiz"]);
 
-Route::get("/user", function (Request $request) {
-    return $request->user()->load('subscriptionPlan');
+Route::get('/test-simple', function () {
+    return response()->json(['message' => 'ça marche']);
+});
+
+Route::get("/user", [UserController::class, "profile"])->middleware("auth:sanctum");
+
+Route::get("/user/test", function (Request $request) {
+    $user = \App\Models\User::with('subscriptionPlan')->find($request->user()->id);
+    return response()->json([
+        'user' => $user->toArray()
+    ]);
 })->middleware("auth:sanctum");
 
 Route::put("/user/profile", [UserController::class, "updateProfile"])->middleware("auth:sanctum");
