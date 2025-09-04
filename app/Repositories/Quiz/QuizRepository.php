@@ -7,6 +7,7 @@ use App\Components\Repository;
 use App\Models\QuestionResponse;
 use App\Services\ElasticsearchService;
 use App\Services\PointsCalculationService;
+use App\Services\LeaderboardService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -28,18 +29,28 @@ class QuizRepository extends Repository
     protected $pointsService;
 
     /**
+     * The Leaderboard service instance.
+     *
+     * @var LeaderboardService
+     */
+    protected $leaderboardService;
+
+    /**
      * QuizRepository constructor.
      *
      * @param ElasticsearchService|null $elasticsearchService
      * @param PointsCalculationService|null $pointsService
+     * @param LeaderboardService|null $leaderboardService
      */
     public function __construct(
         ?ElasticsearchService $elasticsearchService = null,
-        ?PointsCalculationService $pointsService = null
+        ?PointsCalculationService $pointsService = null,
+        ?LeaderboardService $leaderboardService = null
     ) {
         parent::__construct(new Quiz());
         $this->elasticsearchService = $elasticsearchService ?? app(ElasticsearchService::class);
         $this->pointsService = $pointsService ?? app(PointsCalculationService::class);
+        $this->leaderboardService = $leaderboardService ?? app(LeaderboardService::class);
     }
 
     /**
@@ -157,6 +168,21 @@ class QuizRepository extends Repository
                 ]);
 
                 $quizAttempt = $this->pointsService->awardPoints($user, $quiz, $pointsData);
+
+                // Update user ranking after points are awarded
+                try {
+                    $this->leaderboardService->updateUserRanking($user->id);
+                    Log::info('User ranking updated after quiz completion', [
+                        'user_id' => $user->id,
+                        'quiz_id' => $quiz->id
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Error updating user ranking after quiz completion', [
+                        'user_id' => $user->id,
+                        'quiz_id' => $quiz->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
 
                 Log::info('Quiz completed with points attribution', [
                     'user_id' => $user->id,
