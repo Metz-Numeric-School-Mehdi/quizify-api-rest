@@ -12,7 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // Cron leaderboard:update-ranking removed
+        // Update leaderboard rankings every hour
+        $schedule->command('leaderboard:update-ranking')
+                 ->hourly()
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/leaderboard-ranking.log'));
     }
 
     /**
