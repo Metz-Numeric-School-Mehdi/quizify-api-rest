@@ -28,9 +28,11 @@ class Kernel extends HttpKernel
         ],
 
         "api" => [
+            \App\Http\Middleware\SecurityHeadersMiddleware::class,
             "throttle:api",
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\XSSProtectionMiddleware::class,
+            \App\Http\Middleware\RoleBasedAccessControl::class,
         ],
     ];
 
