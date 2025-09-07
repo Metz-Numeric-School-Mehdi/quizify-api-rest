@@ -1,4 +1,13 @@
-.PHONY: build up fresh-seed adminer adminer-down clear-cache clear-config clear-route clear-view clear-all help
+.PHONY: build up fresh-seed adminer adminer-down clear-cache clear-config clear-route clear-view clear-all ssl help
+ssl:
+	@echo "\033[1;34m[INFO]\033[0m Génération des clés SSL dans le dossier certs..."
+	mkdir -p certs
+	openssl req -x509 -nodes -days 365 \
+	  -newkey rsa:2048 \
+	  -keyout certs/quizify.local.key \
+	  -out certs/quizify.local.crt \
+	  -subj "/C=FR/ST=Paris/L=Paris/O=Quizify/OU=Dev/CN=quizify.local"
+	@echo "\033[1;32m[SUCCESS]\033[0m Clés SSL générées dans certs/ !"
 
 build:
 	@echo "\033[1;34m[INFO]\033[0m Build de l'image Docker quizify-api:v1..."
@@ -77,5 +86,6 @@ help:
 	@echo "  down-v            : Arrête les services et supprime les volumes"
 	@echo "  clear-all         : Nettoie tous les caches Laravel"
 	@echo "  test              : Exécute les tests PHPUnit"
+	@echo "  ssl               : Génère les clés SSL dans le dossier certs/"
 	@echo "  help              : Affiche cette aide"
 	@echo ""
