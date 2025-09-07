@@ -43,15 +43,20 @@ class LeaderboardController extends Controller
 
         $leaderboard = $this->leaderboardService->getGlobalLeaderboard($limit, $page, $order);
 
-        if (isset($leaderboard['data']) && is_array($leaderboard['data'])) {
-            $leaderboard['data'] = array_map(function ($user, $index) use ($leaderboard, $order) {
-                $user['total_score'] = isset($user['total_score']) ? (int)$user['total_score'] : 0;
-                $user['ranking'] = $user['ranking'] === null ? 0 : $user['ranking'];
-                $user['quizzes_completed'] = isset($user['quizzes_completed']) ? (int)$user['quizzes_completed'] : 0;
-                $user['position'] = $order === 'asc' ? count($leaderboard['data']) - $index : $index + 1;
-                return $user;
-            }, $leaderboard['data'], array_keys($leaderboard['data']));
-        }
+        // Process the data items from the paginator
+        $processedData = $leaderboard->getCollection()->map(function ($user, $index) use ($order, $page, $limit) {
+            $user->total_score = (int)$user->total_score;
+            $user->ranking = $user->ranking === null ? 0 : $user->ranking;
+            $user->quizzes_completed = (int)$user->quizzes_completed;
+
+            // Calculate position based on page and index
+            $user->position = ($page - 1) * $limit + $index + 1;
+
+            return $user;
+        });
+
+        // Replace the collection in the paginator
+        $leaderboard->setCollection($processedData);
 
         return response()->json([
             'status' => 'success',

@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             AnswerSeeder::class,
             BadgeSeeder::class,
             UserBadgeSeeder::class,
+            SubscriptionPlanSeeder::class,
         ]);
     }
 }

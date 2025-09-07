@@ -15,6 +15,7 @@ class LeaderboardService
     public function updateAllRankings(): bool
     {
         try {
+            // Get all users with their total scores, ordered by score descending
             $users = User::select([
                 "users.id",
                 DB::raw("COALESCE(SUM(scores.score), 0) as total_score"),
@@ -22,14 +23,30 @@ class LeaderboardService
                 ->leftJoin("scores", "users.id", "=", "scores.user_id")
                 ->groupBy("users.id")
                 ->orderBy("total_score", "desc")
+                ->orderBy("users.id", "asc") // Secondary sort for consistent ordering
                 ->get();
 
-            $rank = 1;
+            $currentRank = 1;
+            $previousScore = null;
+            $position = 0;
+
             foreach ($users as $user) {
-                User::where("id", $user->id)->update(["ranking" => $rank]);
-                $rank++;
+                $position++;
+
+                // If the score is different from the previous score, update the rank
+                if ($previousScore !== null && $user->total_score != $previousScore) {
+                    $currentRank = $position;
+                }
+
+                User::where("id", $user->id)->update(["ranking" => $currentRank]);
+
+                $previousScore = $user->total_score;
             }
-            Log::info("User rankings updated successfully from controller function.");
+
+            Log::info("User rankings updated successfully", [
+                'total_users' => $users->count(),
+                'top_user_score' => $users->first()?->total_score ?? 0
+            ]);
             return true;
         } catch (\Exception $e) {
             Log::error("Failed to update user rankings: " . $e->getMessage());
@@ -87,7 +104,7 @@ class LeaderboardService
             "users.username",
             "users.firstname",
             "users.lastname",
-            "users.profile_photo",
+            "users.avatar",
             "users.ranking",
             DB::raw("COALESCE(SUM(scores.score), 0) as total_score"),
             DB::raw("COUNT(DISTINCT scores.quiz_id) as quizzes_completed"),
@@ -98,12 +115,12 @@ class LeaderboardService
                 "users.username",
                 "users.firstname",
                 "users.lastname",
-                "users.profile_photo",
+                "users.avatar",
                 "users.ranking",
             )
             ->orderBy("total_score", $order)
             ->orderBy("quizzes_completed", $order)
-            ->orderBy("users.username", "asc")
+            ->orderBy("users.id", "asc") // Use ID instead of username for consistent ordering
             ->paginate($limit, ["*"], "page", $page);
     }
 
@@ -127,7 +144,7 @@ class LeaderboardService
             "users.username",
             "users.firstname",
             "users.lastname",
-            "users.profile_photo",
+            "users.avatar",
             "users.ranking",
             DB::raw("COALESCE(SUM(scores.score), 0) as total_score"),
             DB::raw("COUNT(DISTINCT scores.quiz_id) as quizzes_completed"),
@@ -140,7 +157,7 @@ class LeaderboardService
                 "users.username",
                 "users.firstname",
                 "users.lastname",
-                "users.profile_photo",
+                "users.avatar",
                 "users.ranking",
             )
             ->orderBy("total_score", $order)
@@ -169,7 +186,7 @@ class LeaderboardService
             "users.username",
             "users.firstname",
             "users.lastname",
-            "users.profile_photo",
+            "users.avatar",
             "users.ranking",
             "teams.name as team_name",
             DB::raw("COALESCE(SUM(scores.score), 0) as total_score"),
@@ -183,7 +200,7 @@ class LeaderboardService
                 "users.username",
                 "users.firstname",
                 "users.lastname",
-                "users.profile_photo",
+                "users.avatar",
                 "users.ranking",
                 "teams.name",
             )

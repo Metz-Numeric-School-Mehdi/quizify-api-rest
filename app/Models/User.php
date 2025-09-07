@@ -26,6 +26,7 @@ class User extends Authenticatable
         "password",
         "role_id",
         "profile_photo",
+        "avatar",
         "team_id",
         "organization_id",
         "subscription_plan_id",
@@ -74,6 +75,21 @@ class User extends Authenticatable
     public function subscriptionPlan(): BelongsTo
     {
         return $this->belongsTo(SubscriptionPlan::class);
+    }
+
+    public function quizAttempts(): HasMany
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
+
+    /**
+     * Get the total points earned by the user across all quiz attempts.
+     *
+     * @return int
+     */
+    public function getTotalPoints(): int
+    {
+        return $this->scores()->sum('score') ?? 0;
     }
 
     protected $hidden = ["password", "remember_token"];
