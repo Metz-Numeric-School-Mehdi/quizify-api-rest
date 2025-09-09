@@ -72,6 +72,33 @@ class QuizController extends CRUDController
     }
 
     /**
+     * Display a listing of the quizzes.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index(): JsonResponse
+    {
+        $request = request();
+        $filters = [];
+
+        // Check if user wants only their own quizzes
+        if ($request->query('mine') == 1) {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Authentication required to access your quizzes'
+                ], 401);
+            }
+            $filters['mine'] = 1;
+            $filters['user_id'] = $user->id;
+        }
+
+        $quizzes = $this->repository->index($filters);
+
+        return response()->json($quizzes);
+    }
+
+    /**
      * Search quizzes using ElasticSearch via Laravel Scout.
      *
      * @param \Illuminate\Http\Request $request

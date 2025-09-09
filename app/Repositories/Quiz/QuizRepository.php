@@ -66,11 +66,19 @@ class QuizRepository extends Repository
     /**
      * Get all quizzes with their related questions and answers.
      *
+     * @param array $filters Optional filters to apply
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function index()
+    public function index(array $filters = [])
     {
-        return $this->model->with($this->withRelations)->get();
+        $query = $this->model->with($this->withRelations);
+
+        // Filter by user if 'mine' parameter is set to 1
+        if (isset($filters['mine']) && $filters['mine'] == 1 && isset($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+
+        return $query->get();
     }
 
     /**
