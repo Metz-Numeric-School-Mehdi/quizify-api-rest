@@ -44,14 +44,46 @@ class QuizController extends CRUDController
     public function submit(Request $request, $quizId): JsonResponse
     {
         try {
-            // Validation des données de soumission
             $validated = $request->validate([
                 'responses' => 'required|array|min:1',
                 'responses.*.question_id' => 'required|integer|exists:questions,id',
-                'responses.*.answer_id' => 'required_without:responses.*.user_answer|nullable|integer|exists:answers,id',
-                'responses.*.user_answer' => 'required_without:responses.*.answer_id|nullable|string|max:1000',
-                'time_spent' => 'nullable|integer|min:0', // Temps passé en secondes (0 accepté pour quiz sans limite)
+                'responses.*.answer_id' => 'required_without_all:responses.*.user_answer,responses.*.user_order|nullable|integer|exists:answers,id',
+                'responses.*.user_answer' => 'required_without_all:responses.*.answer_id,responses.*.user_order|nullable|string|max:1000',
+                'responses.*.user_order' => 'required_without_all:responses.*.answer_id,responses.*.user_answer|nullable',
+                'time_spent' => 'nullable|integer|min:0',
             ]);
+
+            foreach ($validated['responses'] as $index => &$response) {
+                if (isset($response['user_order']) && is_string($response['user_order'])) {
+                    $decoded = json_decode($response['user_order'], true);
+                    if (is_array($decoded)) {
+                        $response['user_order'] = $decoded;
+                    } else {
+                        return response()->json([
+                            "message" => "Données de soumission invalides",
+                            "errors" => ["responses.{$index}.user_order" => ["Le format de user_order est invalide. Doit être un array ou un JSON valide."]]
+                        ], 422);
+                    }
+                }
+
+                if (isset($response['user_order'])) {
+                    if (!is_array($response['user_order']) || empty($response['user_order'])) {
+                        return response()->json([
+                            "message" => "Données de soumission invalides",
+                            "errors" => ["responses.{$index}.user_order" => ["user_order doit être un array non vide."]]
+                        ], 422);
+                    }
+
+                    foreach ($response['user_order'] as $answerId) {
+                        if (!is_integer($answerId) || $answerId <= 0) {
+                            return response()->json([
+                                "message" => "Données de soumission invalides",
+                                "errors" => ["responses.{$index}.user_order" => ["Tous les éléments de user_order doivent être des entiers positifs."]]
+                            ], 422);
+                        }
+                    }
+                }
+            }
 
             $user = $request->user();
             $timeSpent = $validated['time_spent'] ?? null;

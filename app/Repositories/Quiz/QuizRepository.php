@@ -115,12 +115,20 @@ class QuizRepository extends Repository
                 throw new \Exception("Question non trouvée: " . $response["question_id"]);
             }
 
-            $correctAnswer = $question->answers->where("is_correct", true)->first();
             $isCorrect = false;
 
-            if (isset($response["answer_id"])) {
+            // Gérer les questions de type "remise dans l'ordre"
+            if ($question->question_type_id == 4 && isset($response["user_order"])) {
+                $isCorrect = $this->validateOrderingQuestion($question, $response["user_order"]);
+            }
+            // Gérer les questions avec réponse par ID
+            elseif (isset($response["answer_id"])) {
+                $correctAnswer = $question->answers->where("is_correct", true)->first();
                 $isCorrect = $correctAnswer && $correctAnswer->id == $response["answer_id"];
-            } elseif (isset($response["user_answer"])) {
+            }
+            // Gérer les questions avec réponse textuelle
+            elseif (isset($response["user_answer"])) {
+                $correctAnswer = $question->answers->where("is_correct", true)->first();
                 $isCorrect =
                     strtolower(trim($correctAnswer->content ?? "")) ===
                     strtolower(trim($response["user_answer"]));
@@ -131,6 +139,7 @@ class QuizRepository extends Repository
                 "question_id" => $question->id,
                 "answer_id" => $response["answer_id"] ?? null,
                 "user_answer" => $response["user_answer"] ?? null,
+                "user_response_data" => isset($response["user_order"]) ? json_encode($response["user_order"]) : null,
                 "is_correct" => $isCorrect,
                 "user_id" => $user?->id,
             ]);
@@ -322,6 +331,36 @@ class QuizRepository extends Repository
         }
 
         return false;
+    }
+
+    /**
+     * Validate an ordering question response.
+     *
+     * @param \App\Models\Question $question
+     * @param array $userOrder Array of answer IDs in user's order
+     * @return bool
+     */
+    private function validateOrderingQuestion($question, array $userOrder): bool
+    {
+        // Get the correct order based on order_position
+        $correctOrder = $question->answers()
+            ->orderBy('order_position')
+            ->pluck('id')
+            ->toArray();
+
+        // Check if arrays have the same length
+        if (count($correctOrder) !== count($userOrder)) {
+            return false;
+        }
+
+        // Compare the arrays element by element
+        for ($i = 0; $i < count($correctOrder); $i++) {
+            if ($correctOrder[$i] != $userOrder[$i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
