@@ -71,7 +71,7 @@ class QuizRepository extends Repository
     public function index()
     {
         $query = $this->model->with($this->withRelations);
-        
+
         if (request()->boolean('mine')) {
             $query->where('user_id', request()->user()->id);
         }
@@ -115,16 +115,13 @@ class QuizRepository extends Repository
 
             $isCorrect = false;
 
-            // Gérer les questions de type "remise dans l'ordre"
             if ($question->question_type_id == 4 && isset($response["user_order"])) {
                 $isCorrect = $this->validateOrderingQuestion($question, $response["user_order"]);
             }
-            // Gérer les questions avec réponse par ID
             elseif (isset($response["answer_id"])) {
                 $correctAnswer = $question->answers->where("is_correct", true)->first();
                 $isCorrect = $correctAnswer && $correctAnswer->id == $response["answer_id"];
             }
-            // Gérer les questions avec réponse textuelle
             elseif (isset($response["user_answer"])) {
                 $correctAnswer = $question->answers->where("is_correct", true)->first();
                 $isCorrect =
@@ -184,7 +181,6 @@ class QuizRepository extends Repository
 
                 $quizAttempt = $this->pointsService->awardPoints($user, $quiz, $pointsData);
 
-                // Update user ranking after points are awarded
                 try {
                     $this->leaderboardService->updateUserRanking($user->id);
                     Log::info('User ranking updated after quiz completion', [
@@ -219,7 +215,6 @@ class QuizRepository extends Repository
             Log::info('No user authenticated, skipping points calculation');
         }
 
-        // Réponse enrichie
         $response = [
             "score" => $score,
             "total" => $totalQuestions,
@@ -290,7 +285,6 @@ class QuizRepository extends Repository
             $data['slug'] = Str::slug($data['title']);
         }
 
-        // Gérer la duration : si 0 ou non définie, mettre null pour temps infini
         if (isset($data['duration']) && ($data['duration'] === 0 || $data['duration'] === '0')) {
             $data['duration'] = null;
         }
@@ -340,18 +334,15 @@ class QuizRepository extends Repository
      */
     private function validateOrderingQuestion($question, array $userOrder): bool
     {
-        // Get the correct order based on order_position
         $correctOrder = $question->answers()
             ->orderBy('order_position')
             ->pluck('id')
             ->toArray();
 
-        // Check if arrays have the same length
         if (count($correctOrder) !== count($userOrder)) {
             return false;
         }
 
-        // Compare the arrays element by element
         for ($i = 0; $i < count($correctOrder); $i++) {
             if ($correctOrder[$i] != $userOrder[$i]) {
                 return false;
