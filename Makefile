@@ -73,6 +73,28 @@ test:
 	php artisan test
 	@echo "\033[1;32m[SUCCESS]\033[0m Tests PHPUnit terminés !"
 
+test-coverage:
+	@echo "\033[1;34m[INFO]\033[0m Exécution des tests avec code coverage..."
+	@mkdir -p storage/coverage
+	@docker exec quizify-api-rest-quizify-api-1 composer test-coverage
+	@echo "\033[1;32m[SUCCESS]\033[0m Tests avec coverage terminés !"
+
+test-coverage-html:
+	@echo "\033[1;34m[INFO]\033[0m Génération du rapport HTML de code coverage..."
+	@mkdir -p storage/coverage/html
+	@docker exec quizify-api-rest-quizify-api-1 composer test-coverage-html
+	@echo "\033[1;32m[SUCCESS]\033[0m Rapport HTML généré dans storage/coverage/html/ !"
+
+test-coverage-ci:
+	@echo "\033[1;34m[INFO]\033[0m Génération des rapports de coverage pour CI/CD..."
+	@mkdir -p storage/coverage
+	@docker exec quizify-api-rest-quizify-api-1 composer coverage-all
+	@echo "\033[1;32m[SUCCESS]\033[0m Rapports de coverage générés !"
+
+coverage-open:
+	@echo "\033[1;34m[INFO]\033[0m Ouverture du rapport HTML de coverage..."
+	@open storage/coverage/html/index.html || xdg-open storage/coverage/html/index.html || echo "Ouvrez manuellement : storage/coverage/html/index.html"
+
 help:
 	@echo ""
 	@echo "\033[1;33mCommandes disponibles :\033[0m"
@@ -86,6 +108,10 @@ help:
 	@echo "  down-v            : Arrête les services et supprime les volumes"
 	@echo "  clear-all         : Nettoie tous les caches Laravel"
 	@echo "  test              : Exécute les tests PHPUnit"
+	@echo "  test-coverage     : Tests avec coverage de base"
+	@echo "  test-coverage-html: Tests avec rapport HTML de coverage"
+	@echo "  test-coverage-ci  : Tests avec tous les rapports pour CI/CD"
+	@echo "  coverage-open     : Ouvre le rapport HTML de coverage"
 	@echo "  ssl               : Génère les clés SSL dans le dossier certs/"
 	@echo "  help              : Affiche cette aide"
 	@echo ""

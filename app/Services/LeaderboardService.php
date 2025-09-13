@@ -99,15 +99,16 @@ class LeaderboardService
     public function getGlobalLeaderboard(int $limit = 50, int $page = 1, string $order = "desc")
     {
         $order = strtolower($order) === "asc" ? "asc" : "desc";
-        return User::select([
+
+        $subquery = User::select([
             "users.id",
             "users.username",
             "users.firstname",
             "users.lastname",
             "users.avatar",
-            "users.ranking",
             DB::raw("COALESCE(SUM(scores.score), 0) as total_score"),
             DB::raw("COUNT(DISTINCT scores.quiz_id) as quizzes_completed"),
+            DB::raw("DENSE_RANK() OVER (ORDER BY COALESCE(SUM(scores.score), 0) DESC, COUNT(DISTINCT scores.quiz_id) DESC, users.id ASC) as ranking")
         ])
             ->leftJoin("scores", "users.id", "=", "scores.user_id")
             ->groupBy(
@@ -115,13 +116,20 @@ class LeaderboardService
                 "users.username",
                 "users.firstname",
                 "users.lastname",
-                "users.avatar",
-                "users.ranking",
-            )
-            ->orderBy("total_score", $order)
-            ->orderBy("quizzes_completed", $order)
-            ->orderBy("users.id", "asc") // Use ID instead of username for consistent ordering
-            ->paginate($limit, ["*"], "page", $page);
+                "users.avatar"
+            );
+
+        if ($order === "asc") {
+            $subquery = $subquery->orderBy("total_score", "asc")
+                                 ->orderBy("quizzes_completed", "asc")
+                                 ->orderBy("users.id", "desc");
+        } else {
+            $subquery = $subquery->orderBy("total_score", "desc")
+                                 ->orderBy("quizzes_completed", "desc")
+                                 ->orderBy("users.id", "asc");
+        }
+
+        return $subquery->paginate($limit, ["*"], "page", $page);
     }
 
     /**
