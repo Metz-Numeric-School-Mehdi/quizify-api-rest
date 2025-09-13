@@ -43,7 +43,6 @@ class LeaderboardController extends Controller
 
         $leaderboard = $this->leaderboardService->getGlobalLeaderboard($limit, $page, $order);
 
-        // Process the data items from the paginator
         $processedData = $leaderboard->getCollection()->map(function ($user, $index) use ($order, $page, $limit) {
             $user->total_score = (int)$user->total_score;
             $user->quizzes_completed = (int)$user->quizzes_completed;
@@ -52,7 +51,6 @@ class LeaderboardController extends Controller
             return $user;
         });
 
-        // Replace the collection in the paginator
         $leaderboard->setCollection($processedData);
 
         return response()->json([
