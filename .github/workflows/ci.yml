@@ -94,8 +94,27 @@ jobs:
           # Verify that roles have been properly created
           php artisan tinker --execute="App\Models\Role::all()->pluck('name', 'id');"
 
-      - name: Run tests
-        run: php artisan test --env=testing
+      - name: Run tests with coverage
+        run: |
+          mkdir -p storage/coverage
+          php artisan test --env=testing --coverage --coverage-clover=storage/coverage/clover.xml --coverage-html=storage/coverage/html
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: storage/coverage/clover.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Upload coverage to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-reports
+          path: |
+            storage/coverage/clover.xml
+            storage/coverage/html/
+          retention-days: 30
 
       - name: Run code quality checks
         run: |
