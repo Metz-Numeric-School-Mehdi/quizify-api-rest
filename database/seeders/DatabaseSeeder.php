@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use App\Models\Download;
 use Illuminate\Database\Seeder;
 
@@ -15,7 +16,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             TagSeeder::class,
-            QuizLevel::class,
+            CategorySeeder::class,
+            QuizLevelSeeder::class,
             UserSeeder::class,
             QuizSeeder::class,
             QuestionTypeSeeder::class,
@@ -23,6 +25,7 @@ class DatabaseSeeder extends Seeder
             AnswerSeeder::class,
             BadgeSeeder::class,
             UserBadgeSeeder::class,
+            SubscriptionPlanSeeder::class,
         ]);
     }
 }

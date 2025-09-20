@@ -6,6 +6,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/storage/temp
 .env
 .env.backup
 .env.production
@@ -21,3 +22,12 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/docs/rapport
+SECURITY.md
+SECURITY_IMPLEMENTATION.md
+LIVRABLE_SECURITE.md
+GUIDE_PEDAGOGIQUE_SECURITE.md
+SECURITE_LIVRABLE_DETAILLE.md
+DOCUMENTATION_TESTS_UNITAIRES.md
+DOCUMENTATION_STRIPE_COMPLETE.md
+certs

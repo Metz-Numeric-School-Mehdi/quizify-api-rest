@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -16,7 +18,7 @@ class AuthController extends Controller
             "password" => "required",
         ]);
 
-        $user = User::where("email", $data["email"])->first();
+        $user = User::with('subscriptionPlan')->where("email", $data["email"])->first();
 
         if (!$user || !Hash::check($data["password"], $user->password)) {
             return response()->json(
@@ -30,7 +32,7 @@ class AuthController extends Controller
         $token = $user->createToken("auth_token")->plainTextToken;
 
         return response()->json([
-            "user" => $user,
+            'user' => new UserResource($user),
             "token" => $token,
         ]);
     }
@@ -43,6 +45,8 @@ class AuthController extends Controller
                     "username" => "required|unique:users",
                     "email" => "required|email|unique:users",
                     "password" => "required",
+                    "photo" => "nullable|image|max:2048",
+                    "avatar" => "nullable|string|url",
                     Password::min(8)->letters()->numbers()->symbols(),
                 ],
                 [
@@ -59,8 +63,14 @@ class AuthController extends Controller
 
             $data["password"] = Hash::make($data["password"]);
 
-            $user = User::create($data);
+            if ($request->hasFile("photo")) {
+                $file = $request->file("photo");
+                $filename = "profile_" . uniqid() . "." . $file->getClientOriginalExtension();
+                $path = Storage::disk("minio")->putFileAs("", $file, $filename);
+                $data["profile_photo"] = $path;
+            }
 
+            $user = User::create($data);
             $token = $user->createToken("auth_token")->plainTextToken;
 
             return response()->json([
@@ -74,6 +84,14 @@ class AuthController extends Controller
                 ],
                 422
             );
+        } catch (\Exception $e) {
+            return response()->json(
+                [
+                    "message" => "Erreur lors de l'inscription de l'utilisateur.",
+                    "error" => $e->getMessage(),
+                ],
+                500
+            );
         }
     }
 
@@ -86,10 +104,44 @@ class AuthController extends Controller
 
     public function signOut(Request $request)
     {
-        $request->user()->tokens()->delete();
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    "message" => "Utilisateur non authentifié."
+                ], 401);
+            }
+            $user->tokens()->delete();
 
-        return response()->json([
-            "message" => "Logged out",
-        ]);
+            return response()->json([
+                "message" => "Logged out",
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Erreur lors de la déconnexion.",
+                "error" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function verify(Request $request)
+    {
+        try {
+            $user = User::with('subscriptionPlan')->find($request->user()->id);
+            if (!$user) {
+                return response()->json([
+                    "message" => "Utilisateur non authentifié."
+                ], 401);
+            }
+
+            return response()->json([
+                'user' => new UserResource($user)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Erreur lors de la vérification.",
+                "error" => $e->getMessage()
+            ], 500);
+        }
     }
 }

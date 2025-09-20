@@ -1,0 +1,1864 @@
+{
+  "info": {
+    "_postman_id": "quizify-api-collection-2025",
+    "name": "Quizify API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" },
+    { "key": "user_id", "value": "" },
+    { "key": "quiz_id_easy", "value": "1" },
+    { "key": "quiz_id_medium", "value": "2" },
+    { "key": "quiz_id_hard", "value": "3" },
+    { "key": "category_id", "value": "1" },
+    { "key": "subscription_plan_id", "value": "1" },
+    { "key": "stripe_payment_method", "value": "pm_card_visa" },
+    { "key": "stripe_price_id", "value": "price_test_premium" },
+    { "key": "session_id", "value": "" },
+    { "key": "stripe_session_id", "value": "" },
+    { "key": "ordering_question_id", "value": "" },
+    { "key": "osi_question_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Points System",
+      "item": [
+        {
+          "name": "Get User Points",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/points/user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "points", "user"]
+            }
+          }
+        },
+        {
+          "name": "Get User Category Points",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/points/user/category/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "points", "user", "category", "1"],
+              "variable": [
+                {
+                  "key": "categoryId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Points Leaderboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/points/leaderboard?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "points", "leaderboard"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of users to return (1-100)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Points Configuration",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/points/config",
+              "host": ["{{base_url}}"],
+              "path": ["api", "points", "config"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stripe Subscriptions",
+      "item": [
+        {
+          "name": "Get All Subscription Plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscription/plans",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "plans"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Response contains plans array', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('plans');",
+                  "    pm.expect(json.plans).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Plans have required fields', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.plans && json.plans.length > 0) {",
+                  "        var plan = json.plans[0];",
+                  "        pm.expect(plan).to.have.property('id');",
+                  "        pm.expect(plan).to.have.property('name');",
+                  "        pm.expect(plan).to.have.property('price');",
+                  "        pm.expect(plan).to.have.property('features');",
+                  "    }",
+                  "});",
+                  "",
+                  "// Save plan ID for next requests",
+                  "pm.test('Save first plan ID', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.plans && json.plans.length > 0) {",
+                  "        pm.environment.set('subscription_plan_id', json.plans[0].id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🛒 Checkout - Free Plan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/checkout?sub=free",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"],
+              "query": [
+                {
+                  "key": "sub",
+                  "value": "free",
+                  "description": "Plan de souscription (free, premium, business)"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Free plan activated successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json.subscription.status).to.eql('active');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🛒 Checkout - Premium Plan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/checkout?sub=premium",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"],
+              "query": [
+                {
+                  "key": "sub",
+                  "value": "premium",
+                  "description": "Plan de souscription (free, premium, business)"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Checkout session created successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('checkout_url');",
+                  "    pm.expect(json).to.have.property('session_id');",
+                  "    pm.expect(json.plan.slug).to.eql('premium');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🛒 Checkout - Business Plan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/checkout?sub=business",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"],
+              "query": [
+                {
+                  "key": "sub",
+                  "value": "business",
+                  "description": "Plan de souscription (free, premium, business)"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Checkout session created successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('checkout_url');",
+                  "    pm.expect(json).to.have.property('session_id');",
+                  "    pm.expect(json.plan.slug).to.eql('business');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Checkout - Invalid Plan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/checkout?sub=invalid",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"],
+              "query": [
+                {
+                  "key": "sub",
+                  "value": "invalid",
+                  "description": "Plan invalide pour tester la validation"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid plan returns error', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('error');",
+                  "    pm.expect(json.provided_plan).to.eql('invalid');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❓ Checkout - Missing Parameter",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkout"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missing parameter returns error', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('available_plans');",
+                  "    pm.expect(json.available_plans).to.include.members(['free', 'premium', 'business']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Free Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Free subscription created successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Premium Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 2,\n  \"payment_method\": \"{{stripe_payment_method}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Premium subscription created or requires action', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 402]);",
+                  "});",
+                  "",
+                  "pm.test('Response contains subscription data', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (pm.response.code === 200) {",
+                  "        pm.expect(json).to.have.property('subscription');",
+                  "    } else if (pm.response.code === 402) {",
+                  "        pm.expect(json).to.have.property('payment');",
+                  "        pm.expect(json.payment).to.have.property('intent_client_secret');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current Subscription",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscription/current",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "current"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Current subscription retrieved', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test('Subscription data contains plan info', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data) {",
+                  "        pm.expect(json.data).to.have.property('plan');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "✅ Confirm Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_id\": \"cs_test_your_session_id_here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/confirm-payment",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "confirm-payment"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Payment confirmed successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('plan');",
+                  "    pm.expect(json).to.have.property('subscription_status');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Swap Subscription Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/swap",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "swap"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Subscription plan swapped successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscription/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "cancel"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Subscription cancelled successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json.message).to.include('annulé');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resume Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscription/resume",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "resume"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Subscription resumed successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Billing Portal URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscription/billing-portal",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "billing-portal"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Billing portal URL generated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('url');",
+                  "    pm.expect(json.url).to.include('billing.stripe.com');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Stripe Cards - Successful Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 2,\n  \"payment_method\": \"pm_card_visa\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Visa card payment successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Stripe Cards - 3D Secure Required",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 2,\n  \"payment_method\": \"pm_card_threeDSecure2Required\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('3D Secure authentication required', function () {",
+                  "    pm.response.to.have.status(402);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('payment');",
+                  "    pm.expect(json.payment).to.have.property('intent_client_secret');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Stripe Cards - Declined Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 2,\n  \"payment_method\": \"pm_card_chargeDeclined\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "subscription", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Payment declined as expected', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Subscription Limits Testing",
+      "item": [
+        {
+          "name": "Create Quiz (Test Limits)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Quiz for Limits\",\n  \"description\": \"Testing subscription limits\",\n  \"level_id\": 1,\n  \"category_id\": 1,\n  \"is_public\": true,\n  \"status\": \"published\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/quizzes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "quizzes"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Quiz creation respects subscription limits', function () {",
+                  "    // Should succeed if under limit, fail with 403 if over limit",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 403]);",
+                  "});",
+                  "",
+                  "pm.test('Limit exceeded response format', function () {",
+                  "    if (pm.response.code === 403) {",
+                  "        var json = pm.response.json();",
+                  "        pm.expect(json).to.have.property('current_count');",
+                  "        pm.expect(json).to.have.property('max_allowed');",
+                  "        pm.expect(json).to.have.property('upgrade_required');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Access Analytics (Test Premium Feature)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "dashboard"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Analytics access based on subscription plan', function () {",
+                  "    // Should succeed for Premium/Business, fail with 403 for Free",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});",
+                  "",
+                  "pm.test('Premium feature restriction message', function () {",
+                  "    if (pm.response.code === 403) {",
+                  "        var json = pm.response.json();",
+                  "        pm.expect(json.message).to.include('plan');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Leaderboard",
+      "item": [
+        {
+          "name": "Global Leaderboard",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/leaderboard", "host": ["{{base_url}}"], "path": ["api", "leaderboard"] }
+          }
+        },
+        {
+          "name": "Leaderboard By Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/leaderboard/category/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leaderboard", "category", "1"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Number of users to return"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Leaderboard By Organization",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/leaderboard/organization/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leaderboard", "organization", "1"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Number of users to return"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Rankings (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": { "raw": "{{base_url}}/api/leaderboard/update-rankings", "host": ["{{base_url}}"], "path": ["api", "leaderboard", "update-rankings"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Points System Integration Tests",
+      "item": [
+        {
+          "name": "Test Points Flow - Easy Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 1,\n      \"answer_id\": 1\n    },\n    {\n      \"question_id\": 2,\n      \"answer_id\": 3\n    },\n    {\n      \"question_id\": 3,\n      \"answer_id\": 5\n    },\n    {\n      \"question_id\": 4,\n      \"answer_id\": 7\n    },\n    {\n      \"question_id\": 5,\n      \"answer_id\": 9\n    }\n  ],\n  \"time_spent\": 180\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/quizzes/1/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "quizzes", "1", "submit"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Perfect score on easy quiz gives base points', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.score).to.equal(5);",
+                  "    pm.expect(json.percentage).to.equal(100);",
+                  "    pm.expect(json.points.level_multiplier).to.equal(1.0);",
+                  "    pm.expect(json.points.performance_bonus).to.equal(50);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Points Flow - Hard Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 6,\n      \"answer_id\": 11\n    },\n    {\n      \"question_id\": 7,\n      \"answer_id\": 13\n    },\n    {\n      \"question_id\": 8,\n      \"answer_id\": 15\n    }\n  ],\n  \"time_spent\": 600\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/quizzes/3/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "quizzes", "3", "submit"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Perfect score on hard quiz gives multiplied points', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.score === 3) {",
+                  "        pm.expect(json.points.level_multiplier).to.equal(2.0);",
+                  "        pm.expect(json.points.level_points).to.be.above(json.points.base_points);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify Total Points After Tests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/points/user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "points", "user"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('User points are accumulated correctly', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.total_points).to.be.a('number');",
+                  "    pm.expect(json.total_points).to.be.above(0);",
+                  "    console.log('Total user points: ' + json.total_points);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"mdg23\",\n  \"email\": \"mdg@admin.com\",\n  \"password\": \"@Admin123\",\n  \"firstname\": \"Mehdi\",\n  \"lastname\": \"DIAS GOMES\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/signup", "host": ["{{base_url}}"], "path": ["api", "auth", "signup"] }
+          }
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"mdg@admin.com\",\n  \"password\": \"@Admin123\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/signin", "host": ["{{base_url}}"], "path": ["api", "auth", "signin"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.environment.set(\"token\", json.token);",
+                  "    }",
+                  "    if (json.user && json.user.id) {",
+                  "        pm.environment.set(\"user_id\", json.user.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{base_url}}/api/auth/signout", "host": ["{{base_url}}"], "path": ["api", "auth", "signout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Profile",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{base_url}}/api/user", "host": ["{{base_url}}"], "path": ["api", "user"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('User profile contains subscription plan details', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('subscription_plan_id');",
+                  "    pm.expect(json).to.have.property('subscription_plan');",
+                  "    if (json.subscription_plan) {",
+                  "        pm.expect(json.subscription_plan).to.have.property('name');",
+                  "        pm.expect(json.subscription_plan).to.have.property('slug');",
+                  "        pm.expect(json.subscription_plan).to.have.property('features');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"new_username\",\n  \"firstname\": \"John\",\n  \"lastname\": \"Doe\",\n  \"email\": \"john.doe@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Profile updated successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('user');",
+                  "    pm.expect(json.message).to.include('succès');",
+                  "});",
+                  "",
+                  "pm.test('Updated user data is returned', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.user) {",
+                  "        pm.expect(json.user).to.have.property('id');",
+                  "        pm.expect(json.user).to.have.property('username');",
+                  "        pm.expect(json.user).to.have.property('email');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile with Photo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "username", "value": "updated_username", "type": "text" },
+                { "key": "firstname", "value": "Jean", "type": "text" },
+                { "key": "lastname", "value": "Dupont", "type": "text" },
+                { "key": "profile_photo", "type": "file", "src": "" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Profile with photo updated successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('user');",
+                  "    pm.expect(json.message).to.include('succès');",
+                  "});",
+                  "",
+                  "pm.test('Profile photo URL is provided', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.user && json.user.profile_photo) {",
+                  "        pm.expect(json).to.have.property('profile_photo_url');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"NewPassword123!\",\n  \"password_confirmation\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Password updated successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json.message).to.include('succès');",
+                  "});",
+                  "",
+                  "pm.test('Password is not returned in response', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.user) {",
+                  "        pm.expect(json.user).to.not.have.property('password');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile - Validation Error",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid-email\",\n  \"password\": \"weak\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Validation errors are returned', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('errors');",
+                  "    pm.expect(json.message).to.include('validation');",
+                  "});",
+                  "",
+                  "pm.test('Error messages are in French', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.errors) {",
+                  "        var errorMessages = JSON.stringify(json.errors);",
+                  "        pm.expect(errorMessages).to.satisfy(function(msg) {",
+                  "            return msg.includes('email') || msg.includes('mot de passe');",
+                  "        });",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Badges",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"badges\": [1,2]\n}" },
+            "url": { "raw": "{{base_url}}/api/users/1/assign-badges", "host": ["{{base_url}}"], "path": ["api", "users", "1", "assign-badges"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quizzes",
+      "item": [
+        { "name": "List Quizzes", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quizzes", "host": ["{{base_url}}"], "path": ["api", "quizzes"] } } },
+        { "name": "Search Quizzes", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quizzes/search?q=test&category_id=1&level_id=2", "host": ["{{base_url}}"], "path": ["api", "quizzes", "search"], "query": [{ "key": "q", "value": "test", "description": "Search term" }, { "key": "category_id", "value": "1", "description": "Filter by category" }, { "key": "level_id", "value": "2", "description": "Filter by level" }] } } },
+        { "name": "Show Quiz", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quizzes/:id", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id"], "variable": [{ "key": "id", "value": "1" }] } } },
+        { "name": "Create Quiz", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "body": { "mode": "formdata", "formdata": [ { "key": "title", "value": "Quiz Test", "type": "text" }, { "key": "description", "value": "Description", "type": "text" }, { "key": "level_id", "value": "1", "type": "text" }, { "key": "category_id", "value": "1", "type": "text" }, { "key": "is_public", "value": "true", "type": "text" }, { "key": "status", "value": "published", "type": "text" }, { "key": "thumbnail", "type": "file" } ] }, "url": { "raw": "{{base_url}}/api/quizzes", "host": ["{{base_url}}"], "path": ["api", "quizzes"] } } },
+        { "name": "Update Quiz", "request": { "method": "PUT", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Quiz Test Updated\",\n  \"description\": \"Description\",\n  \"level_id\": 1,\n  \"category_id\": 1,\n  \"is_public\": true,\n  \"status\": \"published\"\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id"], "variable": [{ "key": "id", "value": "1" }] } } },
+        { "name": "Delete Quiz", "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/quizzes/:id", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id"], "variable": [{ "key": "id", "value": "1" }] } } },
+        { "name": "Submit Quiz", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 1,\n      \"answer_id\": 1\n    },\n    {\n      \"question_id\": 2,\n      \"answer_id\": 3\n    }\n  ],\n  \"time_spent\": 300\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id/submit", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id", "submit"], "variable": [{ "key": "id", "value": "1" }] } }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "pm.test('Response contains points data', function () {", "    var json = pm.response.json();", "    pm.expect(json).to.have.property('points');", "    pm.expect(json.points).to.have.property('total_points');", "    pm.expect(json.points).to.have.property('base_points');", "    pm.expect(json.points).to.have.property('level_multiplier');", "});", "", "pm.test('Points are calculated correctly', function () {", "    var json = pm.response.json();", "    if (json.points) {", "        pm.expect(json.points.total_points).to.be.a('number');", "        pm.expect(json.points.total_points).to.be.above(0);", "    }", "});" ] } } ] },
+        { "name": "Get Quiz Questions", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quizzes/:quizId/questions", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":quizId", "questions"], "variable": [{ "key": "quizId", "value": "1" }] } } },
+        { "name": "Submit Perfect Quiz (Fast)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 1,\n      \"answer_id\": 1\n    },\n    {\n      \"question_id\": 2,\n      \"answer_id\": 3\n    },\n    {\n      \"question_id\": 3,\n      \"answer_id\": 5\n    },\n    {\n      \"question_id\": 4,\n      \"answer_id\": 7\n    },\n    {\n      \"question_id\": 5,\n      \"answer_id\": 9\n    }\n  ],\n  \"time_spent\": 300\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id/submit", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id", "submit"], "variable": [{ "key": "id", "value": "1" }] } } },
+        { "name": "Submit Average Quiz (Normal Time)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"responses\": [\n    {\n      \"question_id\": 1,\n      \"answer_id\": 1\n    },\n    {\n      \"question_id\": 2,\n      \"answer_id\": 4\n    },\n    {\n      \"question_id\": 3,\n      \"answer_id\": 5\n    }\n  ],\n  \"time_spent\": 900\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id/submit", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id", "submit"], "variable": [{ "key": "id", "value": "2" }] } } },
+        { "name": "Enregistrer Score (Quiz Attempt)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"score\": 7,\n  \"max_score\": 10\n}" }, "url": { "raw": "{{base_url}}/api/quizzes/:id/attempt", "host": ["{{base_url}}"], "path": ["api", "quizzes", ":id", "attempt"], "variable": [{ "key": "id", "value": "1" }] } } }
+      ]
+    },
+    {
+      "name": "Questions",
+      "item": [
+        { "name": "List Questions", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/questions", "host": ["{{base_url}}"], "path": ["api", "questions"] } } },
+        { "name": "Show Question", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/questions/:id", "host": ["{{base_url}}"], "path": ["api", "questions", ":id"] } } },
+        { "name": "Create Question", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"quiz_id\": 1,\n  \"content\": \"Question test ?\",\n  \"question_type_id\": 1\n}" }, "url": { "raw": "{{base_url}}/api/questions", "host": ["{{base_url}}"], "path": ["api", "questions"] } } },
+        { "name": "Update Question", "request": { "method": "PUT", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"quiz_id\": 1,\n  \"content\": \"Question test updated ?\",\n  \"question_type_id\": 1\n}" }, "url": { "raw": "{{base_url}}/api/questions/:id", "host": ["{{base_url}}"], "path": ["api", "questions", ":id"] } } },
+        { "name": "Delete Question", "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/questions/:id", "host": ["{{base_url}}"], "path": ["api", "questions", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Questions de Remise dans l'Ordre",
+      "item": [
+        {
+          "name": "Créer une Question de Remise dans l'Ordre",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quiz_id\": 1,\n  \"content\": \"Remettez dans l'ordre chronologique les étapes de développement\",\n  \"answers\": [\n    {\n      \"content\": \"Analyse des besoins\",\n      \"order_position\": 1\n    },\n    {\n      \"content\": \"Conception et design\",\n      \"order_position\": 2\n    },\n    {\n      \"content\": \"Développement\",\n      \"order_position\": 3\n    },\n    {\n      \"content\": \"Tests\",\n      \"order_position\": 4\n    },\n    {\n      \"content\": \"Déploiement\",\n      \"order_position\": 5\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Question de remise dans l\\'ordre créée avec succès', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json.data).to.have.property('answers');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Récupérer une Question de Remise dans l'Ordre",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions/:questionId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions", ":questionId"],
+              "variable": [
+                {
+                  "key": "questionId",
+                  "value": "1",
+                  "description": "ID de la question de remise dans l'ordre"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Question récupérée avec réponses mélangées', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('question');",
+                  "    pm.expect(json.question).to.have.property('answers');",
+                  "    pm.expect(json.question.answers).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Soumettre Réponse - Ordre Correct",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_order\": [1, 2, 3, 4, 5]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions/:questionId/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions", ":questionId", "submit"],
+              "variable": [
+                {
+                  "key": "questionId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Réponse correcte validée', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('result');",
+                  "    pm.expect(json.result.is_correct).to.be.true;",
+                  "    pm.expect(json.result.percentage).to.equal(100);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Soumettre Réponse - Ordre Incorrect",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_order\": [3, 1, 2, 5, 4]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions/:questionId/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions", ":questionId", "submit"],
+              "variable": [
+                {
+                  "key": "questionId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Réponse incorrecte avec feedback détaillé', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('result');",
+                  "    pm.expect(json.result.is_correct).to.be.false;",
+                  "    pm.expect(json.result).to.have.property('feedback');",
+                  "    pm.expect(json.result.feedback).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Récupérer Questions d'Ordre par Quiz",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/quizzes/:quizId/ordering-questions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "quizzes", ":quizId", "ordering-questions"],
+              "variable": [
+                {
+                  "key": "quizId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Questions de remise dans l\\'ordre du quiz récupérées', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier une Question de Remise dans l'Ordre",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Remettez dans l'ordre les phases du cycle de vie logiciel\",\n  \"answers\": [\n    {\n      \"content\": \"Planification\",\n      \"order_position\": 1\n    },\n    {\n      \"content\": \"Analyse\",\n      \"order_position\": 2\n    },\n    {\n      \"content\": \"Conception\",\n      \"order_position\": 3\n    },\n    {\n      \"content\": \"Implémentation\",\n      \"order_position\": 4\n    },\n    {\n      \"content\": \"Test\",\n      \"order_position\": 5\n    },\n    {\n      \"content\": \"Maintenance\",\n      \"order_position\": 6\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions/:questionId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions", ":questionId"],
+              "variable": [
+                {
+                  "key": "questionId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Question de remise dans l\\'ordre modifiée avec succès', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    pm.expect(json).to.have.property('data');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Complet - Couches OSI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quiz_id\": 1,\n  \"content\": \"Ordonnez les couches du modèle OSI du niveau le plus bas au plus haut\",\n  \"answers\": [\n    {\n      \"content\": \"Couche physique\",\n      \"order_position\": 1\n    },\n    {\n      \"content\": \"Couche liaison de données\",\n      \"order_position\": 2\n    },\n    {\n      \"content\": \"Couche réseau\",\n      \"order_position\": 3\n    },\n    {\n      \"content\": \"Couche transport\",\n      \"order_position\": 4\n    },\n    {\n      \"content\": \"Couche session\",\n      \"order_position\": 5\n    },\n    {\n      \"content\": \"Couche présentation\",\n      \"order_position\": 6\n    },\n    {\n      \"content\": \"Couche application\",\n      \"order_position\": 7\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ordering-questions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ordering-questions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Question OSI créée avec succès', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.answers).to.have.lengthOf(7);",
+                  "});",
+                  "",
+                  "pm.test('Stockage de l\\'ID pour tests suivants', function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('osi_question_id', json.data.id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Answers",
+      "item": [
+        { "name": "List Answers", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/answers", "host": ["{{base_url}}"], "path": ["api", "answers"] } } },
+        { "name": "Show Answer", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/answers/:id", "host": ["{{base_url}}"], "path": ["api", "answers", ":id"] } } },
+        { "name": "Create Answer", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"question_id\": 1,\n  \"content\": \"Réponse test\",\n  \"is_correct\": true\n}" }, "url": { "raw": "{{base_url}}/api/answers", "host": ["{{base_url}}"], "path": ["api", "answers"] } } },
+        { "name": "Update Answer", "request": { "method": "PUT", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"question_id\": 1,\n  \"content\": \"Réponse test modifiée\",\n  \"is_correct\": false\n}" }, "url": { "raw": "{{base_url}}/api/answers/:id", "host": ["{{base_url}}"], "path": ["api", "answers", ":id"] } } },
+        { "name": "Delete Answer", "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{base_url}}/api/answers/:id", "host": ["{{base_url}}"], "path": ["api", "answers", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "item": [
+        { "name": "List Organizations", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/organizations", "host": ["{{base_url}}"], "path": ["api", "organizations"] } } },
+        { "name": "Show Organization", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/organizations/:id", "host": ["{{base_url}}"], "path": ["api", "organizations", ":id"] } } },
+        { "name": "Create Organization", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Organization Test\"\n}" }, "url": { "raw": "{{base_url}}/api/organizations", "host": ["{{base_url}}"], "path": ["api", "organizations"] } } },
+        { "name": "Update Organization", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Organization Test Updated\"\n}" }, "url": { "raw": "{{base_url}}/api/organizations/:id", "host": ["{{base_url}}"], "path": ["api", "organizations", ":id"] } } },
+        { "name": "Delete Organization", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/organizations/:id", "host": ["{{base_url}}"], "path": ["api", "organizations", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Teams",
+      "item": [
+        { "name": "List Teams", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/teams", "host": ["{{base_url}}"], "path": ["api", "teams"] } } },
+        { "name": "Show Team", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/teams/:id", "host": ["{{base_url}}"], "path": ["api", "teams", ":id"] } } },
+        { "name": "Create Team", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Team Test\",\n  \"organization_id\": 1\n}" }, "url": { "raw": "{{base_url}}/api/teams", "host": ["{{base_url}}"], "path": ["api", "teams"] } } },
+        { "name": "Update Team", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Team Test Updated\",\n  \"organization_id\": 1\n}" }, "url": { "raw": "{{base_url}}/api/teams/:id", "host": ["{{base_url}}"], "path": ["api", "teams", ":id"] } } },
+        { "name": "Delete Team", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/teams/:id", "host": ["{{base_url}}"], "path": ["api", "teams", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Badges",
+      "item": [
+        { "name": "List Badges", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/badges", "host": ["{{base_url}}"], "path": ["api", "badges"] } } },
+        { "name": "Show Badge", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/badges/:id", "host": ["{{base_url}}"], "path": ["api", "badges", ":id"] } } },
+        { "name": "Create Badge", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Badge Test\",\n  \"description\": \"Description\",\n  \"icon\": \"icon.png\"\n}" }, "url": { "raw": "{{base_url}}/api/badges", "host": ["{{base_url}}"], "path": ["api", "badges"] } } },
+        { "name": "Update Badge", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Badge Test Updated\",\n  \"description\": \"Description\",\n  \"icon\": \"icon2.png\"\n}" }, "url": { "raw": "{{base_url}}/api/badges/:id", "host": ["{{base_url}}"], "path": ["api", "badges", ":id"] } } },
+        { "name": "Delete Badge", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/badges/:id", "host": ["{{base_url}}"], "path": ["api", "badges", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Scores",
+      "item": [
+        { "name": "List Scores", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/scores", "host": ["{{base_url}}"], "path": ["api", "scores"] } } },
+        { "name": "Show Score", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/scores/:id", "host": ["{{base_url}}"], "path": ["api", "scores", ":id"] } } },
+        { "name": "Create Score", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"user_id\": 1,\n  \"quiz_id\": 1,\n  \"score\": 10\n}" }, "url": { "raw": "{{base_url}}/api/scores", "host": ["{{base_url}}"], "path": ["api", "scores"] } } },
+        { "name": "Update Score", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"user_id\": 1,\n  \"quiz_id\": 1,\n  \"score\": 15\n}" }, "url": { "raw": "{{base_url}}/api/scores/:id", "host": ["{{base_url}}"], "path": ["api", "scores", ":id"] } } },
+        { "name": "Delete Score", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/scores/:id", "host": ["{{base_url}}"], "path": ["api", "scores", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Question Types",
+      "item": [
+        { "name": "List Question Types", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/question-types", "host": ["{{base_url}}"], "path": ["api", "question-types"] } } },
+        { "name": "Show Question Type", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/question-types/:id", "host": ["{{base_url}}"], "path": ["api", "question-types", ":id"] } } },
+        { "name": "Create Question Type", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"QCM\"\n}" }, "url": { "raw": "{{base_url}}/api/question-types", "host": ["{{base_url}}"], "path": ["api", "question-types"] } } },
+        { "name": "Update Question Type", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"QCM Updated\"\n}" }, "url": { "raw": "{{base_url}}/api/question-types/:id", "host": ["{{base_url}}"], "path": ["api", "question-types", ":id"] } } },
+        { "name": "Delete Question Type", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/question-types/:id", "host": ["{{base_url}}"], "path": ["api", "question-types", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Question Responses",
+      "item": [
+        { "name": "List Question Responses", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/question-responses", "host": ["{{base_url}}"], "path": ["api", "question-responses"] } } },
+        { "name": "Show Question Response", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/question-responses/:id", "host": ["{{base_url}}"], "path": ["api", "question-responses", ":id"] } } },
+        { "name": "Create Question Response", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"quiz_id\": 1,\n  \"user_id\": 1,\n  \"question_id\": 1,\n  \"answer_id\": 1,\n  \"user_answer\": \"Réponse\",\n  \"user_response_data\": null,\n  \"is_correct\": true,\n  \"points\": 1,\n  \"response_time\": 10\n}" }, "url": { "raw": "{{base_url}}/api/question-responses", "host": ["{{base_url}}"], "path": ["api", "question-responses"] } } },
+        { "name": "Update Question Response", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"quiz_id\": 1,\n  \"user_id\": 1,\n  \"question_id\": 1,\n  \"answer_id\": 1,\n  \"user_answer\": \"Réponse modifiée\",\n  \"user_response_data\": null,\n  \"is_correct\": false,\n  \"points\": 0,\n  \"response_time\": 12\n}" }, "url": { "raw": "{{base_url}}/api/question-responses/:id", "host": ["{{base_url}}"], "path": ["api", "question-responses", ":id"] } } },
+        { "name": "Delete Question Response", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/question-responses/:id", "host": ["{{base_url}}"], "path": ["api", "question-responses", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Quiz Levels",
+      "item": [
+        { "name": "List Quiz Levels", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/quiz-levels", "host": ["{{base_url}}"], "path": ["api", "quiz-levels"] } } }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        { "name": "List Categories", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/categories", "host": ["{{base_url}}"], "path": ["api", "categories"] } } }
+      ]
+    }
+  ]
+}

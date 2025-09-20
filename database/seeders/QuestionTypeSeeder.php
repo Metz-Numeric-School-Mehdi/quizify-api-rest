@@ -16,6 +16,7 @@ class QuestionTypeSeeder extends Seeder
             ["name" => "Choix multiples"],
             ["name" => "Vrai ou Faux"],
             ["name" => "Choix unique"],
+            ["name" => "Remise dans l'ordre"],
         ];
 
         foreach ($questionTypes as $questionType) {

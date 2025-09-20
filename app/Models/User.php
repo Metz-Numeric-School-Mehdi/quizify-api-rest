@@ -12,30 +12,39 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Cashier\Billable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes, HasApiTokens;
+    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, Billable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = ["username", "firstname", "lastname", "email", "password", "role"];
+    protected $fillable = [
+        "username",
+        "firstname",
+        "lastname",
+        "email",
+        "password",
+        "role_id",
+        "profile_photo",
+        "avatar",
+        "team_id",
+        "organization_id",
+        "subscription_plan_id",
+    ];
 
-    /**
-     * Get the role associated with this user
-     */
     public function role(): BelongsTo
     {
         return $this->BelongsTo(Role::class);
     }
 
-    public function quizzes(): HasMany
+    public function badges()
     {
-        return $this->hasMany(Quiz::class);
+        return $this->belongsToMany(\App\Models\Badge::class, "user_badges");
+    }
+
+    public function quizzesCreated(): HasMany
+    {
+        return $this->hasMany(\App\Models\Quiz::class);
     }
 
     public function quizSessions(): BelongsToMany
@@ -43,18 +52,48 @@ class User extends Authenticatable
         return $this->belongsToMany(Quiz::class);
     }
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = ["password", "remember_token"];
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class);
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function questionResponses(): HasMany
+    {
+        return $this->hasMany(QuestionResponse::class);
+    }
+
+    public function scores(): HasMany
+    {
+        return $this->hasMany(Score::class);
+    }
+
+    public function subscriptionPlan(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionPlan::class);
+    }
+
+    public function quizAttempts(): HasMany
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
 
     /**
-     * Get the attributes that should be cast.
+     * Get the total points earned by the user across all quiz attempts.
      *
-     * @return array<string, string>
+     * @return int
      */
+    public function getTotalPoints(): int
+    {
+        return $this->scores()->sum('score') ?? 0;
+    }
+
+    protected $hidden = ["password", "remember_token"];
+
     protected function casts(): array
     {
         return [

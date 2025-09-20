@@ -1,0 +1,36 @@
+**.git
+**.gitignore
+**.gitattributes
+**.vscode
+**.history
+**.DS_Store
+
+docker*
+!docker/php/configs
+!docker/php/logrotate
+!docker/php/queue
+!docker/php/docker-entrypoint.sh
+
+# vendor/**/test*
+# vendor/**/tests*
+# vendor/**/Tests*
+
+**/vendor
+!**/public/vendor
+
+**/coverage*
+**/*node_modules
+
+**/phpunit.xml
+**/README.md
+**/LICENSE
+**/CHANGELOG.md
+**/.styleci.yml
+**/.editorconfig
+**/bootstrap/cache/*
+**/storage/app/*
+**/storage/framework/cache/*
+**/storage/framework/sessions/*
+**/storage/framework/testing/*
+**/storage/framework/views/*
+**/storage/logs/*
