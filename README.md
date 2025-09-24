@@ -50,7 +50,7 @@ Quizify est une application de quiz complète qui permet aux utilisateurs de cr�
 
 1. Cloner le repository :
    ```bash
-   git clone https://github.com/yourusername/quizify-api-rest.git
+   git clone https://github.com/MehdiDiasGomes/quizify-api-rest.git
    cd quizify-api-rest
    ```
 
@@ -66,9 +66,9 @@ Quizify est une application de quiz complète qui permet aux utilisateurs de cr�
    STRIPE_WEBHOOK_SECRET=whsec_...
    ```
 
-4. Démarrer avec base fraîche :
+4. Démarrer l'api :
    ```bash
-   make up-fresh
+   make up
    ```
 
 5. L'application est accessible sur http://localhost:8000
